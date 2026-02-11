@@ -4,7 +4,7 @@
 ENTRY(loader)
 
 SECTIONS {
-    . = 0x00100000 /* Endereço inicial. Antes desse, espaço reservado para GRUB*/
+    . = 0x00100000; /* Endereço inicial. Antes desse, espaço reservado para GRUB*/
 
     .text ALIGN (0x1000) : 
     {
