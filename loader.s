@@ -1,5 +1,4 @@
-global loader                   ; Aqui informa onde o arquivo começa
-                                ; armazena um endereço de memória que aponta para as instruções          
+global loader                   ; Usado pelo Linker para referenciar o código do SO          
 
 MAGIC_NUMBER equ 0x1BADB002     ; Define o número mágico lido pelo GRUB
 FLAGS        equ 0x0            ; Configurações do GRUB

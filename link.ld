@@ -1,7 +1,7 @@
-/* Esse arquivo é responsável por estruturar as seções de memória do SO para o Bootloader */
-/* Necessário, pois o Bootloader precisa saber em qual parte da memória / espaço armazenar instruções*/
 
-ENTRY(loader)
+
+
+ENTRY (loader)
 
 SECTIONS {
     . = 0x00100000; /* Endereço inicial. Antes desse, espaço reservado para GRUB*/
@@ -18,14 +18,12 @@ SECTIONS {
 
     .data ALIGN (0x1000) :
     {
-        *(.data)            /* Variáveis que já possuem uma inicialização */
+        *(.data)            /* Variáveis que já possuem uma inicialização com valor atribuído */
     }
 
-    .bss ALIGN (0x1000) :   /* Armazena variáveis declaradas, mas sem valor atribuido */
+    .bss ALIGN (0x1000) :   /* Armazena variáveis declaradas sem valor atribuido */
     {
         *(COMMON)           
         *(.bss)
-
     }
-
 }
