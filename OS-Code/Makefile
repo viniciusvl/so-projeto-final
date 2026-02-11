@@ -1,13 +1,32 @@
-.PHONY: lisrun compile_assembly link_kernel create_folder generate_iso_image config_bootloader
-lisrun: compile_assembly link_kernel create_folder config_bootloader generate_iso_image create_bochs_file
+OBJECTS = out/loader.o out/kmain.o
+OBJECTC = kmain
+OBJECTA = loader
+
+CC = gcc
+
+CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
+-nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c
+
+LDFLAGS = -T src/link.ld -melf_i386
+
+AS = nasm
+
+ASFLAGS = -f elf32
+
+.PHONY: all compile_assembly compile_c_file link_kernel create_folder config_bootloader generate_iso_image create_bochs_file
+all: compile_assembly compile_c_file link_kernel create_folder config_bootloader generate_iso_image create_bochs_file
 
 # Compilando o OS
 compile_assembly:
-	nasm -f elf32 src/loader.s -o out/loader.o
+	$(AS) $(ASFLAGS) src/$(OBJECTA).s -o out/$(OBJECTA).o
+
+# Compilando código C
+compile_c_file:
+	$(CC) $(CFLAGS) src/$(OBJECTC).c -o out/$(OBJECTC).o
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:
-	ld -T src/link.ld -melf_i386 out/loader.o -o kernel.elf
+	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
 
 # Criando a pasta que irá gerar a imagem do SO
 create_folder:
@@ -39,7 +58,7 @@ generate_iso_image:
 # || true => Continua apagando mesmo que uma falhe
 clean: # Apaga todos os arquivos
 	rm -r iso || true
-	rm out/loader.o || true
+	rm out/*.o || true
 	rm kernel.elf || true
 	rm os.iso || true
 	rm *.txt

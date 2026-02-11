@@ -1,17 +1,30 @@
-global loader ; the entry symbol for ELF
-MAGIC_NUMBER equ 0x1BADB002 ; define the magic number constant
-FLAGS equ 0x0 ; multiboot flags
-CHECKSUM equ -MAGIC_NUMBER ; calculate the checksum
+global loader
 
- ; (magic number + checksum + flags should equal 0)
+MAGIC_NUMBER equ 0x1BADB002
+FLAGS        equ 0x0
+CHECKSUM     equ -MAGIC_NUMBER
 
-section .text: ; start of the text (code) section
-align 4 ; the code must be 4 byte aligned
-    dd MAGIC_NUMBER ; write the magic number to the machine code,
-    dd FLAGS ; the flags,
-    dd CHECKSUM ; and the checksum
+section .text
+align 4
+    dd MAGIC_NUMBER
+    dd FLAGS
+    dd CHECKSUM
 
-loader: ; the loader label (defined as entry point in linker script)
-    mov eax, 0xCAFEBABE ; place the number 0xCAFEBABE in the register eax
+loader:
+    mov esp, kernel_stack + KERNEL_STACK_SIZE
+
+    ; Chama a função externa
+    extern sum_of_three
+    push dword 3                ; arg3
+    push dword 2                ; arg2
+    push dword 1                ; arg1
+    call sum_of_three           ; o resultado estará em eax
+
 .loop:
-    jmp .loop ; loop forever
+    jmp .loop                   ; Trava o CPU aqui após a função
+
+section .bss                    ; Seção de DADOS NÃO INICIALIZADOS
+align 4
+KERNEL_STACK_SIZE equ 4096
+kernel_stack:
+    resb KERNEL_STACK_SIZE      ; Apenas reserva o espaço
