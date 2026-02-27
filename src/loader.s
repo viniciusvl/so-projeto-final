@@ -5,7 +5,7 @@ FLAGS        equ 0x0
 CHECKSUM     equ -MAGIC_NUMBER
 
 section .text
-align 4
+align 4                     ; O CPU lê 4 bytes em chuncks para aumentar perfomance
     dd MAGIC_NUMBER
     dd FLAGS
     dd CHECKSUM
