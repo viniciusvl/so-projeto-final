@@ -4,8 +4,19 @@
   - **Período**: 2025.2
   - **Professor**: Davi Henrique dos Santos
 
-## **Instruções de compilação:**
+## **Instruções de compilação e execução:**
 
-## **Instruções de uso:**
+**Para compilar o projeto:**
+```text
+make
+```
+**Para rodar o projeto:**
+```text
+make run 
+```
+**Para limpar arquivos .elf, .o e iso, desnecessários para rodar o projeto**
+```text
+make clean
+```
 
 ## **Constribuições individuais:**
