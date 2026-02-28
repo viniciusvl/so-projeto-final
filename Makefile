@@ -1,4 +1,4 @@
-OBJECTS = loader.o kmain.o io.o
+OBJECTS = loader.o kmain.o outb.o inb.o io_c.o serial_ports.o
 OBJECTC = kmain
 OBJECTA = loader
 
@@ -19,11 +19,14 @@ all: clean compile_assembly compile_c_file link_kernel create_folder config_boot
 # Compilando o OS
 compile_assembly:
 	$(AS) $(ASFLAGS) src/$(OBJECTA).s -o $(OBJECTA).o
-	$(AS) $(ASFLAGS) src/io.s -o io.o
+	$(AS) $(ASFLAGS) src/io/outb.s -o outb.o
+	$(AS) $(ASFLAGS) src/io/inb.s -o inb.o
 
 # Compilando código C
 compile_c_file:
 	$(CC) $(CFLAGS) src/$(OBJECTC).c -o $(OBJECTC).o
+	$(CC) $(CFLAGS) src/io/io.c -o io_c.o
+	$(CC) $(CFLAGS) src/io/serial_ports.c -o serial_ports.o
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:

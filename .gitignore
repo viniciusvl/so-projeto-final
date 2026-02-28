@@ -1,5 +1,6 @@
 *.o
 *.iso
 *.elf
+*.out
 bochslog.txt
 iso/
