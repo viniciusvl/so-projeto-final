@@ -14,11 +14,13 @@ loader:
     mov esp, kernel_stack + KERNEL_STACK_SIZE
 
     ; Chama a função externa
-    extern sum_of_three
-    push dword 3                ; arg3
+    extern fb_write_cell
+    push dword 8                ; arg3
     push dword 2                ; arg2
-    push dword 1                ; arg1
-    call sum_of_three           ; o resultado estará em eax
+    push dword 'A'              ; arg1
+    push dword 0
+    call fb_write_cell          ; o resultado estará em eax
+    add esp, 16                 ; limpa a pilha    
 
 .loop:
     jmp .loop                   ; Trava o CPU aqui após a função
