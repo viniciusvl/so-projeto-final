@@ -1,4 +1,4 @@
-OBJECTS = loader.o kmain.o
+OBJECTS = loader.o kmain.o io.o
 OBJECTC = kmain
 OBJECTA = loader
 
@@ -19,6 +19,7 @@ all: clean compile_assembly compile_c_file link_kernel create_folder config_boot
 # Compilando o OS
 compile_assembly:
 	$(AS) $(ASFLAGS) src/$(OBJECTA).s -o $(OBJECTA).o
+	$(AS) $(ASFLAGS) src/io.s -o io.o
 
 # Compilando código C
 compile_c_file:
