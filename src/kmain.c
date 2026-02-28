@@ -22,6 +22,8 @@ fb para a área de memória RESERVADA para o FRAMEBUFFER.
 
 char *fb = (char *) 0x000B8000;
 void fb_write_cell(unsigned int posicaoChar, char c, unsigned char fg, unsigned char bg){
+    // permite pensar o espaço do buffer como célula
+    posicaoChar = posicaoChar * 2; 
     fb[posicaoChar] = c; 
     
     // (fg & 0x0F) é uma operação bit a bit para garantir que o número seja
@@ -75,9 +77,19 @@ void fb_write(char *buf, unsigned int len){
     fb_move_cursor(pos_cursor);
     
     for (unsigned int i = 0; i < len; i++){
+        if (caractere[i] == '\n'){
+            // calcula a distancia até o fim da linha
+            int gap_ate_final = 80 - (i % 80);
+
+            pos_char += gap_ate_final;
+            pos_cursor += gap_ate_final;
+
+            continue;
+        }
+        
         fb_write_cell(pos_char, caractere[i], 10, 15);
         
-        pos_char += 2;
+        pos_char++;
         pos_cursor++;
         
         fb_move_cursor(pos_cursor);
@@ -86,8 +98,8 @@ void fb_write(char *buf, unsigned int len){
 
 
 void kmain(){
-    char s[12] = "hello, world";
+    char *s = "Desenvolver um sistema operacional\n do zero e um desafio fascinante que exige compreensao p";
 
-    fb_write(s, 12);
+    fb_write(s, 91);
     //fb_write_cell(0, 'A', 10, 15);
 }
