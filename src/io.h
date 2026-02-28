@@ -8,4 +8,6 @@
 */
 void outb(unsigned short port, unsigned char data);
 
+void write(char *buf, unsigned int len);
+
 #endif

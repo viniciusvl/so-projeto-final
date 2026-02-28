@@ -66,3 +66,28 @@ void fb_move_cursor(unsigned short pos){
     */
     outb(FB_DATA_PORT, pos & 0x00FF);
 }
+
+void fb_write(char *buf, unsigned int len){
+    char *caractere = buf;
+    unsigned short pos_cursor = 0;
+    unsigned int pos_char = 0;
+
+    fb_move_cursor(pos_cursor);
+    
+    for (unsigned int i = 0; i < len; i++){
+        fb_write_cell(pos_char, caractere[i], 10, 15);
+        
+        pos_char += 2;
+        pos_cursor++;
+        
+        fb_move_cursor(pos_cursor);
+    }
+}
+
+
+void kmain(){
+    char s[12] = "hello, world";
+
+    fb_write(s, 12);
+    //fb_write_cell(0, 'A', 10, 15);
+}

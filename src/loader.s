@@ -13,10 +13,8 @@ align 4                     ; O CPU lê 4 bytes em chuncks para aumentar perfoma
 loader:
     mov esp, kernel_stack + KERNEL_STACK_SIZE
 
-    extern fb_move_cursor       ; Chama a função externa
-    push dword 1500
-    call fb_move_cursor         ; o resultado estará em eax
-    add esp, 16                 ; limpa a pilha    
+    extern kmain
+    call kmain
 
 .loop:
     jmp .loop                   ; Trava o CPU aqui após a função
