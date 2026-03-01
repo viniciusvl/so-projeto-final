@@ -20,14 +20,18 @@
     │   ├── io.h            # Declaração das funções de IO
     │   └── serial_ports.c  # Funções de comunicação via portas seriais
     └── segment/
-        └── gdt.h           # Definição das structs da GDT (Global Descriptor Table)
+        ├── gdt.h               # Definição das structs da GDT
+        ├── gdt.c               # Inicialização dos descritores e da GDT
+        ├── lgdt_f.s            # Função Assembly que carrega a GDT (lgdt)
+        ├── segment_selector.s  # Configuração dos registradores de segmento
+        └── far_jump.s          # Far jump para atualizar o registrador CS
 ```
 
 - **`loader.s`**: Código Assembly que inicializa a pilha do kernel e chama a função `kmain`.
 - **`kmain.c`**: Contém a função principal do kernel, que é chamada após o boot.
 - **`link.ld`**: Define como o linker organiza as seções do kernel na memória.
 - **`io/`**: Módulo de entrada e saída, responsável pela comunicação com o framebuffer (escrita de caracteres na tela e movimentação do cursor) e com portas seriais.
-- **`segment/`**: Módulo de segmentação de memória, contendo as definições da Global Descriptor Table (GDT).
+- **`segment/`**: Módulo de segmentação de memória, responsável pela configuração da Global Descriptor Table (GDT), carregamento via `lgdt` e atualização dos segment selectors.
 
 
 ## **Instruções de compilação e execução:**

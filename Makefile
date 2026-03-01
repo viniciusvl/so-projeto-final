@@ -1,4 +1,4 @@
-OBJECTS = loader.o kmain.o outb.o inb.o io_c.o serial_ports.o
+OBJECTS = loader.o kmain.o outb.o inb.o io_c.o serial_ports.o lgdt_f.o config_segment_selector.o far_jump.o gdt.o
 OBJECTC = kmain
 OBJECTA = loader
 
@@ -21,12 +21,16 @@ compile_assembly:
 	$(AS) $(ASFLAGS) src/$(OBJECTA).s -o $(OBJECTA).o
 	$(AS) $(ASFLAGS) src/io/outb.s -o outb.o
 	$(AS) $(ASFLAGS) src/io/inb.s -o inb.o
+	$(AS) $(ASFLAGS) src/segment/lgdt_f.s -o lgdt_f.o
+	$(AS) $(ASFLAGS) src/segment/segment_selector.s -o config_segment_selector.o
+	$(AS) $(ASFLAGS) src/segment/far_jump.s -o far_jump.o
 
 # Compilando código C
 compile_c_file:
 	$(CC) $(CFLAGS) src/$(OBJECTC).c -o $(OBJECTC).o
 	$(CC) $(CFLAGS) src/io/io.c -o io_c.o
 	$(CC) $(CFLAGS) src/io/serial_ports.c -o serial_ports.o
+	$(CC) $(CFLAGS) src/segment/gdt.c -o gdt.o
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:
