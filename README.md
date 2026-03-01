@@ -44,9 +44,5 @@ make
 ```text
 make run 
 ```
-**Para limpar arquivos .elf, .o e iso, desnecessários para rodar o projeto**
-```text
-make clean
-```
 
 ## **Constribuições individuais:**

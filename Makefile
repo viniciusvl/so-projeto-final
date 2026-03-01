@@ -1,4 +1,4 @@
-OBJECTS = loader.o kmain.o outb.o inb.o io_c.o serial_ports.o lgdt_f.o config_segment_selector.o far_jump.o gdt.o
+OBJECTS = loader.o kmain.o outb.o inb.o io_c.o serial_ports.o lgdt_f.o config_segment_selector.o far_jump.o gdt.o keyboard.o interrupt_handler.o interrupt_handler_asm.o pic.o load_lidt.o idt.o
 OBJECTC = kmain
 OBJECTA = loader
 
@@ -24,6 +24,8 @@ compile_assembly:
 	$(AS) $(ASFLAGS) src/segment/lgdt_f.s -o lgdt_f.o
 	$(AS) $(ASFLAGS) src/segment/segment_selector.s -o config_segment_selector.o
 	$(AS) $(ASFLAGS) src/segment/far_jump.s -o far_jump.o
+	$(AS) $(ASFLAGS) src/interrupts/interrupt_handler.s -o interrupt_handler_asm.o
+	$(AS) $(ASFLAGS) src/interrupts/load_lidt.s -o load_lidt.o
 
 # Compilando código C
 compile_c_file:
@@ -31,6 +33,10 @@ compile_c_file:
 	$(CC) $(CFLAGS) src/io/io.c -o io_c.o
 	$(CC) $(CFLAGS) src/io/serial_ports.c -o serial_ports.o
 	$(CC) $(CFLAGS) src/segment/gdt.c -o gdt.o
+	$(CC) $(CFLAGS) src/interrupts/keyboard.c -o keyboard.o
+	$(CC) $(CFLAGS) src/interrupts/interrupt_handler.c -o interrupt_handler.o
+	$(CC) $(CFLAGS) src/interrupts/pic.c -o pic.o
+	$(CC) $(CFLAGS) src/interrupts/idt.c -o idt.o
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:

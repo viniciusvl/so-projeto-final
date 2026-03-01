@@ -1,19 +1,38 @@
 /* Funções de C */
 
+#include "interrupts/idt.h"
 #include "io/io.h"
 #include "segment/gdt.h"
 
 void kmain() {
-    unsigned short size = 3;
-    struct gdt_seg_descriptor descriptors[3];
-    struct gdt gdt_global;
-    struct gdt_seg_descriptor *adress_descriptor = descriptors; 
+  unsigned short size = 3;
+  struct gdt_seg_descriptor descriptors[3];
+  struct gdt gdt_global;
+  struct gdt_seg_descriptor *adress_descriptor = descriptors;
 
-    gdt_global.adress = adress_descriptor;
-    gdt_global.size = (size * 8);
+  gdt_global.adress = adress_descriptor;
+  gdt_global.size = (size * 8);
 
-    init_gdt(adress_descriptor, &gdt_global);
+  init_gdt(adress_descriptor, &gdt_global);
 
-    fb_write("hello, world", 12);
-    serial_write(SERIAL_COM1_BASE, 'B');
+  struct idt_descriptor idt[IDT_NUM_ENTRIES];
+  struct idt idt_global;
+
+  idt_global.adress = idt;
+  idt_global.size = (IDT_NUM_ENTRIES * sizeof(struct idt_descriptor)) - 1;
+
+  /* Configurar handler do teclado na posição 33 */
+  init_idt_desc(0x08, (unsigned int)interrupt_handler_33, 0x8E, &idt[33]);
+
+  load_lidt(&idt_global);
+
+  pic_init();
+
+  outb(PIC1_PORT_B, 0xFD);
+
+  asm volatile("sti");
+
+  for (;;) {
+    asm volatile("hlt");
+  }
 }
