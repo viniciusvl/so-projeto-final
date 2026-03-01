@@ -13,8 +13,8 @@ AS = nasm
 
 ASFLAGS = -f elf32
 
-.PHONY: all compile_assembly compile_c_file link_kernel create_folder config_bootloader generate_iso_image run clean
-all: clean compile_assembly compile_c_file link_kernel create_folder config_bootloader generate_iso_image
+.PHONY: all compile_assembly compile_c_file link_kernel create_folder config_bootloader generate_iso_image clean_objects run clean
+all: clean compile_assembly compile_c_file link_kernel create_folder config_bootloader generate_iso_image clean_objects
 
 # Compilando o OS
 compile_assembly:
@@ -58,6 +58,10 @@ generate_iso_image:
 	-boot-info-table \
 	-o os.iso \
 	iso
+
+# Apagando arquivos objeto após gerar a ISO
+clean_objects:
+	rm -f $(OBJECTS) kernel.elf
 
 clean:
 	rm -rf *.o kernel.elf os.iso iso out || true
