@@ -31,6 +31,10 @@ void kmain() {
 
   outb(PIC1_PORT_B, 0xFD);
 
+  /*
+  asm volatile é específico para o GNU, que envia comandos
+  específicos
+  */
   asm volatile("sti");
 
   while(1) {
