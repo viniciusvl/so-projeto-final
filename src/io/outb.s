@@ -1,5 +1,5 @@
 ; Este arquivo define a função usada para mover o cursor na tela
-; A função outb envia apenas 8 bits, mas o protocolo do display
+; A função outb envia apenas 8 bits, mas o protocolo do dispositivo
 ; exige 16 bits. Assim, precisamos chamar a função 2x
 
 global outb

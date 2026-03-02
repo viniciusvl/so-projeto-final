@@ -5,6 +5,7 @@
 #include "segment/gdt.h"
 
 void kmain() {
+  // GDT
   unsigned short size = 3;
   struct gdt_seg_descriptor descriptors[3];
   struct gdt gdt_global;
@@ -32,7 +33,7 @@ void kmain() {
 
   asm volatile("sti");
 
-  for (;;) {
+  while(1) {
     asm volatile("hlt");
   }
 }
