@@ -15,6 +15,7 @@ void kmain() {
   gdt_global.size = (size * 8);
 
   init_gdt(adress_descriptor, &gdt_global);
+  serial_write(SERIAL_COM1_BASE, "Iniciou GDT");
 
   struct idt_descriptor idt[IDT_NUM_ENTRIES];
   struct idt idt_global;
@@ -23,13 +24,21 @@ void kmain() {
   idt_global.size = (IDT_NUM_ENTRIES * sizeof(struct idt_descriptor)) - 1;
 
   /* Configurar handler do teclado na posição 33 */
+  /* como é 32 bits, não dará problema ao rodar*/
   init_idt_desc(0x08, (unsigned int)interrupt_handler_33, 0x8E, &idt[33]);
+  serial_write(SERIAL_COM1_BASE, "Iniciou handler de teclado");
 
   load_lidt(&idt_global);
+  serial_write(SERIAL_COM1_BASE, "Iniciou IDT");
 
   pic_init();
+  serial_write(SERIAL_COM1_BASE, "Iniciou PIC");
 
   outb(PIC1_PORT_B, 0xFD);
+  // mostra hello world na tela
+  fb_write("Hello, world", 12);
+  // gera arquivo com1.out
+  serial_write(SERIAL_COM1_BASE, "Finalizou progama");
 
   /*
   asm volatile é específico para o GNU, que envia comandos

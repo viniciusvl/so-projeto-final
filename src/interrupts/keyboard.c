@@ -10,9 +10,11 @@ static unsigned char scancode_to_ascii[128] = {
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', 39,  '`', 0,   92,  'z',
     'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,   '*', 0,   ' '};
 
-unsigned char read_scan_code(void) { return inb(KBD_DATA_PORT); }
+unsigned char read_scan_code(void) { 
+  return inb(KBD_DATA_PORT); 
+}
 
-static unsigned short cursor_pos = 0;
+static unsigned short cursor_pos = 1000;
 
 void keyboard_handler(void) {
   unsigned char scan_code = read_scan_code();
