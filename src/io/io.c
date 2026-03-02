@@ -89,3 +89,10 @@ void fb_write(char *buf, unsigned int len) {
     fb_move_cursor(pos_cursor);
   }
 }
+
+void fb_clear() {
+  for (unsigned int i = 0; i < 80 * 25 * 2; i += 2) {
+    fb_write_cell(i, ' ', 0, 0);
+  }
+  fb_move_cursor(0);
+}

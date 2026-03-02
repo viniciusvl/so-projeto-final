@@ -25,11 +25,20 @@ void keyboard_handler(void) {
   unsigned char ascii = scancode_to_ascii[scan_code];
 
   if (ascii != 0) {
-    unsigned int pos_char = cursor_pos * 2;
-
-    fb_write_cell(pos_char, ascii, 15, 10);
-
-    cursor_pos++;
+    if (ascii == '\n') {
+      /* Pula para o início da próxima linha (80 colunas por linha) */
+      cursor_pos = cursor_pos + (80 - (cursor_pos % 80));
+    } else if (ascii == '\b') {
+      /* Backspace: volta uma posição e apaga o caractere */
+      if (cursor_pos > 0) {
+        cursor_pos--;
+        fb_write_cell(cursor_pos * 2, ' ', 0, 0);
+      }
+    } else {
+      unsigned int pos_char = cursor_pos * 2;
+      fb_write_cell(pos_char, ascii, 10, 15);
+      cursor_pos++;
+    }
 
     fb_move_cursor(cursor_pos);
   }

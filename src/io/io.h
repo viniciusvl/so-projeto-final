@@ -43,8 +43,14 @@ void fb_move_cursor(unsigned short pos);
 */
 void fb_write(char *buf, unsigned int len);
 
+/*
+    Limpa a tela preenchendo o framebuffer com espaços
+    e reposiciona o cursor no início
+*/
+void fb_clear();
+
 /* Serial Ports */
-#define SERIAL_COM1_BASE 0x3F8 
+#define SERIAL_COM1_BASE 0x3F8
 
 void serial_configure_baud_rate(unsigned short com, unsigned short divisor);
 void serial_configure_line(unsigned short com);
