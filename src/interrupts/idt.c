@@ -1,4 +1,4 @@
-#include "idt.h"
+#include "interrupts/idt.h"
 
 void init_idt_desc(unsigned short select, unsigned int offset,
                    unsigned short type, struct idt_descriptor *idt_desc) {

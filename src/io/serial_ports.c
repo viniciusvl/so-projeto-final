@@ -2,7 +2,7 @@
 com o outro através de Serial Ports.
 */
 
-#include "io.h"
+#include "io/io.h"
 
 /* Essa sintaxe permite chamar um macro passando
 um valor como parâmetro e ele retorna o valor modificado

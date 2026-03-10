@@ -1,5 +1,5 @@
-#include "../io/io.h"
-#include "idt.h"
+#include "io/io.h"
+#include "interrupts/idt.h"
 
 #define KBD_DATA_PORT 0x60
 

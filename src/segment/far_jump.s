@@ -1,4 +1,3 @@
-
 global far_jump
 
 far_jump:    

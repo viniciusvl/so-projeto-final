@@ -1,4 +1,4 @@
-#include "idt.h"
+#include "interrupts/idt.h"
 
 #define KBD_INTERRUPT 0x21
 

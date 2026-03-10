@@ -1,4 +1,4 @@
-#include "gdt.h"
+#include "segment/gdt.h"
 
 void init_gdt_descriptor(unsigned int base, unsigned int limite, unsigned char acces, unsigned char flags, struct gdt_seg_descriptor *s){
 	s->limit_0_15 = (limite & 0xffff);

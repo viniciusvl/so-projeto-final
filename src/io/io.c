@@ -1,6 +1,6 @@
 /* Funções de IO do Framebuffer */
 
-#include "io.h"
+#include "io/io.h"
 
 /*
     Para escrever um caractere na tabela, apontamos o ponteiro

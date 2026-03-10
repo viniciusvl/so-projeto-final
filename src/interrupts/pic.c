@@ -1,5 +1,5 @@
-#include "../io/io.h"
-#include "idt.h"
+#include "io/io.h"
+#include "interrupts/idt.h"
 
 void pic_init(void) {
   outb(PIC1_PORT_A, 0x11);
