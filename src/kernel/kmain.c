@@ -19,8 +19,13 @@ void kmain(unsigned int ebx)
   uint32_t mem_start = ((uint32_t)&kernel_physical_end + 0xFFF) & ~0xFFF;
   uint32_t mem_end   = 64 * 1024 * 1024;
 
-  // Inicializa PFA
-  pfa_init(mem_start, mem_end);
+  // Módulos GRUB (antes de pfa_init para passar o range)
+  multiboot_module_t *mod = get_module_list((multiboot_info_t *) ebx);
+  uint32_t mod_start = mod ? mod->mod_start : 0;
+  uint32_t mod_end   = mod ? mod->mod_end   : 0;
+
+  // Inicializa PFA (reserva frames do módulo internamente)
+  pfa_init(mem_start, mem_end, mod_start, mod_end);
 
   serial_write(SERIAL_COM1_BASE, "PFA OK");
 
@@ -36,17 +41,7 @@ void kmain(unsigned int ebx)
   serial_write_hex(f2);
 
   serial_write(SERIAL_COM1_BASE, "Frames alocados");
-
-
-  // Módulos GRUB
-  multiboot_module_t *mod = get_module_list((multiboot_info_t *) ebx); 
-  //reserva a memória dos módulos GRUB 
-if(mod != NULL) {
-    for(uint32_t addr = mod->mod_start; addr < mod->mod_end; addr += PAGE_SIZE) {
-        // Marca cada página do módulo como alocada
-        pfa_alloc(); // Aqui você poderia implementar pfa_reserve(addr) se tiver
-    }
-}
+  
   // GDT
   unsigned short size = 3;
   struct gdt_seg_descriptor descriptors[3];

@@ -7,7 +7,15 @@ static uint8_t bitmap[MAX_FRAMES / 8];
 static uint32_t start_frame;
 static uint32_t total_frames;
 
-void pfa_init(uint32_t mem_start, uint32_t mem_end)
+void pfa_reserve(uint32_t addr)
+{
+    uint32_t frame = addr / PAGE_SIZE;
+    uint32_t byte  = frame / 8;
+    uint32_t bit   = frame % 8;
+    bitmap[byte] |= (1 << bit);
+}
+
+void pfa_init(uint32_t mem_start, uint32_t mem_end, uint32_t mod_start, uint32_t mod_end)
 {
     // tamanho do bitmap
     uint32_t bitmap_size = MAX_FRAMES / 8;
@@ -35,7 +43,13 @@ void pfa_init(uint32_t mem_start, uint32_t mem_end)
         uint32_t bit  = i % 8;
         bitmap[byte] &= ~(1 << bit);
     }
-} 
+
+    // reserva frames do módulo GRUB
+    if (mod_start != 0 || mod_end != 0) {
+        for (uint32_t addr = mod_start; addr < mod_end; addr += PAGE_SIZE)
+            pfa_reserve(addr);
+    }
+}
 
 uint32_t pfa_alloc()
 {
