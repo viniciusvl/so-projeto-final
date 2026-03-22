@@ -10,6 +10,11 @@ ENTRY(loader)
 SECTIONS {
     . = 0xC0100000; /* Código relocado para 3GB + 1MB no espaço virtual */
 
+    /* Labels do começo do kernel (virtual/físico) */
+    kernel_virtual_start = .;
+    kernel_physical_start = . - 0xC0000000;
+
+
     .multiboot ALIGN(4) : AT(ADDR(.multiboot) - 0xC0000000)
     /* GRUB encontra o header na posição física 0x00100000 */
     {
@@ -37,4 +42,9 @@ SECTIONS {
         *(COMMON) /* Armazena variáveis globais NÃO INICIALIZADAS */
         *(.bss)   /* Variáveis estáticas que não tiveram valor declarado */
     }
+
+    /* Labels do fim do kernel (virtual/físico) */
+    kernel_virtual_end = .;
+    kernel_physical_end = . - 0xC0000000;
 }
+

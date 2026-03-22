@@ -3,6 +3,7 @@ com o outro através de Serial Ports.
 */
 
 #include "io/io.h"
+#include "io/serial_ports.h"
 
 /* Essa sintaxe permite chamar um macro passando
 um valor como parâmetro e ele retorna o valor modificado
@@ -86,4 +87,18 @@ void serial_write(unsigned short com, char *log) {
   }
 
   outb(SERIAL_DATA_PORT(com), '\n');
+}
+void serial_write_hex(uint32_t num)
+{
+    char hex[] = "0123456789ABCDEF";
+    char buffer[9];
+
+    for (int i = 0; i < 8; i++) {
+        buffer[7 - i] = hex[num & 0xF];
+        num >>= 4;
+    }
+
+    buffer[8] = '\0';
+
+    serial_write(SERIAL_COM1_BASE, buffer);
 }
