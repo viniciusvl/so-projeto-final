@@ -6,11 +6,10 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat Mar 21 18:45:38 2026
+# Make data base, printed on Sun Mar 22 10:27:52 2026
 
 # Variables
 
- 
 # environment
 GDK_BACKEND = x11
 # environment
@@ -62,7 +61,7 @@ VSCODE_CODE_CACHE_PATH = /home/eloizamonteiro/.config/Code/CachedData/07ff9d6178
 # environment
 LANG = C
 # environment
-XAUTHORITY = /run/user/1000/.mutter-Xwaylandauth.XZY9L3
+XAUTHORITY = /run/user/1000/.mutter-Xwaylandauth.VW9HM3
 # default
 .LOADED := 
 # default
@@ -102,7 +101,7 @@ ASFLAGS = -f elf32
 # automatic
 @F = $(notdir $@)
 # environment
-VSCODE_PID = 3414
+VSCODE_PID = 9682
 # environment
 XDG_SESSION_TYPE = wayland
 # automatic
@@ -112,7 +111,7 @@ OBJECTA = loader
 # environment
 XDG_DATA_HOME = /home/eloizamonteiro/snap/code/230/.local/share
 # environment
-SESSION_MANAGER = local/eloizamonteiro-IdeaPad-Slim-3-15ARP10:@/tmp/.ICE-unix/2465,unix/eloizamonteiro-IdeaPad-Slim-3-15ARP10:/tmp/.ICE-unix/2465
+SESSION_MANAGER = local/eloizamonteiro-IdeaPad-Slim-3-15ARP10:@/tmp/.ICE-unix/2529,unix/eloizamonteiro-IdeaPad-Slim-3-15ARP10:/tmp/.ICE-unix/2529
 # automatic
 *F = $(notdir $*)
 # environment
@@ -152,6 +151,7 @@ PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/
 # default
 MAKEFILES := 
 # automatic
+ 
 ^F = $(notdir $^)
 # environment
 SNAP_USER_COMMON = /home/eloizamonteiro/snap/code/common
@@ -162,7 +162,7 @@ SNAP = /snap/code/230
 # environment
 APPLICATION_INSIGHTS_NO_STATSBEAT = true
 # environment
-INVOCATION_ID = e78accef08e446f0bdc867d02124b26f
+INVOCATION_ID = d65ce388b3c24b2aa8c0e26282c556c4
 # environment
 SNAP_REVISION = 230
 # environment
@@ -186,7 +186,6 @@ XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
 DESKTOP_SESSION = ubuntu
 # environment
- 
 LOCPATH = /snap/code/230/usr/lib/locale
 # makefile (from 'Makefile', line 1)
 OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o
@@ -203,7 +202,7 @@ SNAP_ARCH = amd64
 # makefile
 .DEFAULT_GOAL := all
 # environment
-SYSTEMD_EXEC_PID = 2501
+SYSTEMD_EXEC_PID = 2562
 # environment
 DISPLAY = :0
 # environment
@@ -219,11 +218,11 @@ SNAP_CONTEXT = bAX4HRh3EP0H7Q3UR5N0rKtj6sh9Y4U-Uq0mJ_GcuZalCW4ezStw
 # makefile (from 'Makefile', line 10)
 LDFLAGS = -T linker/link.ld -melf_i386
 # environment
-MANAGERPID = 2246
+MANAGERPID = 2302
 # environment
 DEBUGINFOD_URLS = https://debuginfod.ubuntu.com 
 # environment
-GIO_LAUNCHED_DESKTOP_FILE_PID = 3324
+GIO_LAUNCHED_DESKTOP_FILE_PID = 9620
 # environment
 _ = /snap/code/230/usr/share/code/code
 # environment
@@ -241,7 +240,7 @@ FC_FONTATIONS = 1
 # environment
 GIO_MODULE_DIR = /home/eloizamonteiro/snap/code/common/.cache/gio-modules
 # environment
-JOURNAL_STREAM = 9:20942
+JOURNAL_STREAM = 9:27704
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -297,7 +296,6 @@ SNAP_LIBRARY_PATH = /var/lib/snapd/lib/gl:/var/lib/snapd/lib/gl32
 
 # Pattern-specific Variable Values
 
- 
 # No pattern-specific variable values.
 
 # Directories
@@ -325,6 +323,7 @@ link_kernel:
 Makefile:
 #  Implicit rule search has been done.
 #  Last modified 2026-03-21 15:57:14.271258067
+ 
 #  File has been updated.
 #  Successfully updated.
 
@@ -403,7 +402,6 @@ compile_assembly:
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
- 
 #  recipe to execute (from 'Makefile', line 21):
 	@mkdir -p build
 	$(AS) $(ASFLAGS) src/boot/$(OBJECTA).s -o build/$(OBJECTA).o
@@ -458,6 +456,6 @@ compile_c_file:
 # strcache performance: lookups = 54 / hit rate = 50%
 # hash-table stats:
 # Load=27/8192=0%, Rehash=0, Collisions=0/54=0%
-# Finished Make data base on Sat Mar 21 18:45:38 2026
+# Finished Make data base on Sun Mar 22 10:27:52 2026
 
  

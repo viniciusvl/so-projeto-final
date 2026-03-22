@@ -1,4 +1,4 @@
-make --dry-run --keep-going --print-directory
+make --dry-run --always-make --keep-going --print-directory
 make: Entering directory '/home/eloizamonteiro/so-projeto-final'
 rm -rf build/* out/* iso/boot/kernel.elf || true
 mkdir -p build

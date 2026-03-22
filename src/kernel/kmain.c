@@ -1,4 +1,5 @@
 /* Funções de C */
+#include "io/serial_ports.h"
 #include <stdint.h>       
 #include "types.h"   
 #include "memory/pfa.h"
@@ -21,14 +22,20 @@ void kmain(unsigned int ebx)
   // Inicializa PFA
   pfa_init(mem_start, mem_end);
 
-  serial_write(SERIAL_COM1_BASE, "PFA OK\n");
+  serial_write(SERIAL_COM1_BASE, "PFA OK");
 
   // Teste
 
-  pfa_alloc();
-  pfa_alloc();
+  uint32_t f1 = pfa_alloc();
+  uint32_t f2 = pfa_alloc();
 
-  serial_write(SERIAL_COM1_BASE, "Frames alocados\n");
+  serial_write(SERIAL_COM1_BASE, "F1: ");
+  serial_write_hex(f1);
+
+  serial_write(SERIAL_COM1_BASE, " F2: ");
+  serial_write_hex(f2);
+
+  serial_write(SERIAL_COM1_BASE, "Frames alocados");
 
 
   // Módulos GRUB
