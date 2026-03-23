@@ -87,7 +87,12 @@ void kmain(unsigned int ebx)
   run_module(mod); // Executando o módulo
 
   asm volatile("sti");
+  
+  serial_write(SERIAL_COM1_BASE, "OS totalmente inicializado");
 
+  // Mostra mensagem na tela usando o Framebuffer
+  fb_clear();
+  fb_write("OS Projeto Final - Bem-vindo!", 29);
 
   while(1) {
     asm volatile("hlt");
