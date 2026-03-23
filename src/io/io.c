@@ -65,7 +65,7 @@ void fb_move_cursor(unsigned short pos) {
   outb(FB_DATA_PORT, pos & 0x00FF);
 }
 
-void fb_write(char *buf, unsigned int len) {
+void fb_write_colored(char *buf, unsigned int len, unsigned char fg, unsigned char bg) {
   char *caractere = buf;
   unsigned short pos_cursor = 0;
   unsigned int pos_char = 0;
@@ -83,13 +83,18 @@ void fb_write(char *buf, unsigned int len) {
       continue;
     }
 
-    fb_write_cell(pos_char, caractere[i], 10, 15);
+    fb_write_cell(pos_char, caractere[i], fg, bg);
 
     pos_char += 2;
     pos_cursor++;
 
     fb_move_cursor(pos_cursor);
   }
+}
+
+void fb_write(char *buf, unsigned int len) {
+  // Chamada default mantendo a cor antiga de fallback (letra 10 e fundo 15)
+  fb_write_colored(buf, len, 10, 15);
 }
 
 void fb_clear() {

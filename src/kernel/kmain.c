@@ -90,9 +90,9 @@ void kmain(unsigned int ebx)
   
   serial_write(SERIAL_COM1_BASE, "OS totalmente inicializado");
 
-  // Mostra mensagem na tela usando o Framebuffer
   fb_clear();
-  fb_write("OS Projeto Final - Bem-vindo!", 29);
+  fb_write_colored("Bem-vindos ao Sistema Operacional!", 34, FB_COLOR_LIGHT_GREEN, FB_COLOR_BLACK);
+  fb_write_colored("\n\n(c) Periodo 2025.2 - Projeto SO", 33, FB_COLOR_LIGHT_CYAN, FB_COLOR_BLACK);
 
   while(1) {
     asm volatile("hlt");

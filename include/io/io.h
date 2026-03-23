@@ -35,11 +35,36 @@ void fb_write_cell(unsigned int posicaoChar, char c, unsigned char fg,
 */
 void fb_move_cursor(unsigned short pos);
 
+/* Enumerações de Cores VGA Padrão */
+#define FB_COLOR_BLACK         0
+#define FB_COLOR_BLUE          1
+#define FB_COLOR_GREEN         2
+#define FB_COLOR_CYAN          3
+#define FB_COLOR_RED           4
+#define FB_COLOR_MAGENTA       5
+#define FB_COLOR_BROWN         6
+#define FB_COLOR_LIGHT_GREY    7
+#define FB_COLOR_DARK_GREY     8
+#define FB_COLOR_LIGHT_BLUE    9
+#define FB_COLOR_LIGHT_GREEN   10
+#define FB_COLOR_LIGHT_CYAN    11
+#define FB_COLOR_LIGHT_RED     12
+#define FB_COLOR_LIGHT_MAGENTA 13
+#define FB_COLOR_YELLOW        14
+#define FB_COLOR_WHITE         15
+
 /*
-    Escreve uma string no framebuffer
+    Escreve uma string no framebuffer com cores
 
     @param buf: ponteiro para a string
     @param len: tamanho da string
+    @param fg: cor da letra
+    @param bg: cor do fundo
+*/
+void fb_write_colored(char *buf, unsigned int len, unsigned char fg, unsigned char bg);
+
+/*
+    Escreve uma string no framebuffer com as cores padrão
 */
 void fb_write(char *buf, unsigned int len);
 
