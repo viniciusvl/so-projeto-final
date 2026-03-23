@@ -168,4 +168,6 @@ make run
 make clean
 ```
 
-## **Constribuições individuais:**
+## **Contribuições individuais:**
+
+- **Allan Vasconcelos**: Focou no desenvolvimento do driver de vídeo (**Framebuffer**), entendendo a lógica de exibição de caracteres na tela com suporte a cores e controle de cursor manipulando registradores VGA (portas `0x3D4`/`0x3D5`) através do código integrado em Assembly e C. Adicionou a comunicação via **Serial Port** (COM1) para exportação de dados. Também atuou na estruturação da segmentação de memória (**GDT**), desenvolvendo os *Segment Descriptors* de 64 bits e codificando a rotina Assembly com `lgdt` para carregamento global.
