@@ -70,8 +70,6 @@ static Header *morecore(uint32_t nunits)
     return freep;
 }
 
-/* ---- API pública ---- */
-
 void kheap_init(void)
 {
     extern uint32_t kernel_virtual_end;
