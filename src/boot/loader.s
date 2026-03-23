@@ -1,4 +1,5 @@
 global loader
+global page_directory
 extern kmain
 
 MAGIC_NUMBER        equ 0x1BADB002

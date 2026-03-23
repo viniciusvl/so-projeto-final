@@ -1,4 +1,4 @@
-OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o
+OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o
 
 OBJECTC = kmain
 OBJECTA = loader
@@ -40,7 +40,9 @@ compile_c_file:
 	$(CC) $(CFLAGS) src/interrupts/pic.c -o build/pic.o
 	$(CC) $(CFLAGS) src/interrupts/idt.c -o build/idt.o
 	$(CC) $(CFLAGS) src/kernel/module_loader.c -o build/module_loader.o
-	$(CC) $(CFLAGS) src/memory/pfa.c -o build/pfa.o   # adicionando o Page Frame Allocator
+	$(CC) $(CFLAGS) src/memory/pfa.c -o build/pfa.o
+	$(CC) $(CFLAGS) src/memory/paging.c -o build/paging.o
+	$(CC) $(CFLAGS) src/memory/kheap.c -o build/kheap.o
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:

@@ -3,6 +3,8 @@
 #include <stdint.h>       
 #include "types.h"   
 #include "memory/pfa.h"
+#include "memory/paging.h"
+#include "memory/kheap.h"
 #include "interrupts/idt.h"
 #include "io/io.h"
 #include "segment/gdt.h"
@@ -29,18 +31,25 @@ void kmain(unsigned int ebx)
 
   serial_write(SERIAL_COM1_BASE, "PFA OK");
 
-  // Teste
+  // Inicializa Page Table do kernel (troca PSE 4MB por page table 4KB)
+  paging_init();
+  serial_write(SERIAL_COM1_BASE, "Paging OK");
 
-  uint32_t f1 = pfa_alloc();
-  uint32_t f2 = pfa_alloc();
+  // Inicializa Kernel Heap (malloc/free)
+  kheap_init();
+  serial_write(SERIAL_COM1_BASE, "Heap OK");
 
-  serial_write(SERIAL_COM1_BASE, "F1: ");
-  serial_write_hex(f1);
-
-  serial_write(SERIAL_COM1_BASE, " F2: ");
-  serial_write_hex(f2);
-
-  serial_write(SERIAL_COM1_BASE, "Frames alocados");
+  // Teste: aloca memória com kmalloc
+  uint32_t *ptr = (uint32_t *)kmalloc(sizeof(uint32_t) * 4);
+  if (ptr) {
+      ptr[0] = 0xCAFEBABE;
+      serial_write(SERIAL_COM1_BASE, "kmalloc OK: ");
+      serial_write_hex((uint32_t)ptr);
+      serial_write(SERIAL_COM1_BASE, " val: ");
+      serial_write_hex(ptr[0]);
+      kfree(ptr);
+      serial_write(SERIAL_COM1_BASE, "kfree OK");
+  }
   
   // GDT
   unsigned short size = 3;
