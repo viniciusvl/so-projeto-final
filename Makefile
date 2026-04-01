@@ -1,4 +1,4 @@
-OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o
+OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o build/process.o build/user_mode.o
 
 OBJECTC = kmain
 OBJECTA = loader
@@ -14,7 +14,7 @@ AS = nasm
 ASFLAGS = -f elf32
 
 .PHONY: all compile_assembly compile_c_file link_kernel generate_iso_image run clean
-all: clean compile_assembly compile_c_file link_kernel generate_iso_image
+all: clean compile_assembly compile_c_file compile_modules link_kernel generate_iso_image
 
 # Compilando o OS
 compile_assembly:
@@ -27,6 +27,7 @@ compile_assembly:
 	$(AS) $(ASFLAGS) src/segment/far_jump.s -o build/far_jump.o
 	$(AS) $(ASFLAGS) src/interrupts/interrupt_handler.s -o build/interrupt_handler_asm.o
 	$(AS) $(ASFLAGS) src/interrupts/load_lidt.s -o build/load_lidt.o
+	$(AS) $(ASFLAGS) src/process/user_mode.s -o build/user_mode.o
 
 # Compilando código C
 compile_c_file:
@@ -43,6 +44,12 @@ compile_c_file:
 	$(CC) $(CFLAGS) src/memory/pfa.c -o build/pfa.o
 	$(CC) $(CFLAGS) src/memory/paging.c -o build/paging.o
 	$(CC) $(CFLAGS) src/memory/kheap.c -o build/kheap.o
+	$(CC) $(CFLAGS) src/process/process.c -o build/process.o
+
+# Compilando módulos do userspace
+compile_modules:
+	@mkdir -p iso/modules
+	$(AS) -f bin src/modules_pre_compiled/program.s -o iso/modules/program
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:

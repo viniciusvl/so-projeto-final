@@ -28,9 +28,12 @@ void paging_init(void)
     extern uint32_t kernel_physical_end;
     uint32_t kp_end = (uint32_t)&kernel_physical_end;
 
-    /* Número de frames que precisamos mapear:*/
+    /* Quantas page frames existem no kernel */
     uint32_t mapped_frames = (kp_end + PAGE_SIZE - 1) / PAGE_SIZE;
 
+    /* Pega o lugar em que a page table do kernel irá COMEÇAR 
+    e faz cada endereço apontar para o frame físico correspondente 
+    entrada 0000 -> endereço 000 */
     /* Preenche as entradas mapeadas: virtual 0xC0000000+i*4K -> físico i*4K */
     for (uint32_t i = 0; i < mapped_frames && i < TEMP_PT_INDEX; i++)
         kernel_page_table[i] = (i * PAGE_SIZE) | PTE_PRESENT | PTE_WRITABLE;

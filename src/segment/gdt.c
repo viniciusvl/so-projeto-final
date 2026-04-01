@@ -16,6 +16,10 @@ void init_gdt(struct gdt_seg_descriptor *gdt, struct gdt *gdt_global){
 	init_gdt_descriptor(0x0, 0x0, 0x0, 0x0, &gdt[0]);
     init_gdt_descriptor(0x0, 0xFFFFFFFF, 0x9B, 0xC, &gdt[1]);
     init_gdt_descriptor(0x0, 0xFFFFFFFF, 0x92, 0xC, &gdt[2]);
+    /* User mode: code segment (DPL=3, offset 0x18) */
+    init_gdt_descriptor(0x0, 0xFFFFFFFF, 0xFB, 0xC, &gdt[3]);
+    /* User mode: data segment (DPL=3, offset 0x20) */
+    init_gdt_descriptor(0x0, 0xFFFFFFFF, 0xF2, 0xC, &gdt[4]);
 	/*Usa o código Assembly que configura o GDT de forma global*/
     lgdt_f(gdt_global);
 

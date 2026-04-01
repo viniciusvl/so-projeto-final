@@ -10,6 +10,7 @@
 #include "segment/gdt.h"
 #include "kernel/module_loader.h"
 #include "multiboot.h"
+#include "process/process.h"
 
 
 void kmain(unsigned int ebx)
@@ -31,34 +32,23 @@ void kmain(unsigned int ebx)
 
   serial_write(SERIAL_COM1_BASE, "PFA OK");
 
-  // Inicializa Page Table do kernel (troca PSE 4MB por page table 4KB)
+  /* Modifica para que a PDT alocada em section data aponte para PT com frames de 4KB */
   paging_init();
-  serial_write(SERIAL_COM1_BASE, "Paging OK");
+  serial_write(SERIAL_COM1_BASE, "Map PT do kernel");
 
   // Inicializa Kernel Heap (malloc/free)
   kheap_init();
   serial_write(SERIAL_COM1_BASE, "Heap OK");
 
-  // Teste: aloca memória com kmalloc
-  uint32_t *ptr = (uint32_t *)kmalloc(sizeof(uint32_t) * 4);
-  if (ptr) {
-      ptr[0] = 0xCAFEBABE;
-      serial_write(SERIAL_COM1_BASE, "kmalloc OK: ");
-      serial_write_hex((uint32_t)ptr);
-      serial_write(SERIAL_COM1_BASE, " val: ");
-      serial_write_hex(ptr[0]);
-      kfree(ptr);
-      serial_write(SERIAL_COM1_BASE, "kfree OK");
-  }
   
   // GDT
-  unsigned short size = 3;
-  struct gdt_seg_descriptor descriptors[3];
+  unsigned short size = 5;
+  struct gdt_seg_descriptor descriptors[5];
   struct gdt gdt_global;
   struct gdt_seg_descriptor *adress_descriptor = descriptors;
 
   gdt_global.adress = adress_descriptor;
-  gdt_global.size = (size * 8);
+  gdt_global.size = (size * 8) - 1;
 
   init_gdt(adress_descriptor, &gdt_global);
   serial_write(SERIAL_COM1_BASE, "Iniciou GDT");
@@ -81,13 +71,18 @@ void kmain(unsigned int ebx)
 
   outb(PIC1_PORT_B, 0xFD);
 
-  serial_write(SERIAL_COM1_BASE, "Finalizou progama");
+  serial_write(SERIAL_COM1_BASE, "Finalizou setup do kernel");
 
-  serial_write(SERIAL_COM1_BASE, "Rodou módulo"); 
-  run_module(mod); // Executando o módulo
+  /* Cria PCB e entra em user mode */
+  if (mod_start != 0 && mod_end != 0) {
+    serial_write(SERIAL_COM1_BASE, "Criando PCB para modulo GRUB");
+    struct PCB *pcb = create_pcb_grub_modules(mod_start, mod_end);
 
-  asm volatile("sti");
-
+    serial_write(SERIAL_COM1_BASE, "Executando modulo em user mode");
+    run_user_mode_module(pcb);
+  } else {
+    serial_write(SERIAL_COM1_BASE, "Nenhum modulo encontrado");
+  }
 
   while(1) {
     asm volatile("hlt");
