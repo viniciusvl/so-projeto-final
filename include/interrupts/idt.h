@@ -27,6 +27,7 @@ struct idt {
 void load_lidt(struct idt *ptr);
 void init_idt_desc(unsigned short select, unsigned int offset,
                    unsigned short type, struct idt_descriptor *idt_desc);
+void init_idt(struct idt *idt_global, struct idt_descriptor *idt);
 
 /* Handler do teclado (assembly) */
 void interrupt_handler_33(void);

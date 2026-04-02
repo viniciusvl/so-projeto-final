@@ -64,6 +64,6 @@ void far_jump();
 
 void init_gdt_descriptor(unsigned int base, unsigned int limite, unsigned char acces, unsigned char flags, struct gdt_seg_descriptor *s);
 
-void init_gdt(struct gdt_seg_descriptor *gdt, struct gdt *gdt_global);
+void init_gdt(struct gdt_seg_descriptor *gdt, struct gdt *gdt_global, unsigned short size);
 
 #endif

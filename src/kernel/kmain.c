@@ -30,15 +30,15 @@ void kmain(unsigned int ebx)
   // Inicializa PFA (reserva frames do módulo internamente)
   pfa_init(mem_start, mem_end, mod_start, mod_end);
 
-  serial_write(SERIAL_COM1_BASE, "PFA OK");
+  serial_write(SERIAL_COM1_BASE, "[SYS - PAGING] PFA inicializado com sucesso");
 
   /* Modifica para que a PDT alocada em section data aponte para PT com frames de 4KB */
   paging_init();
-  serial_write(SERIAL_COM1_BASE, "Map PT do kernel");
+  serial_write(SERIAL_COM1_BASE, "[SYS - PAGING] Kernel modificada para páginas com 4KB");
 
   // Inicializa Kernel Heap (malloc/free)
   kheap_init();
-  serial_write(SERIAL_COM1_BASE, "Heap OK");
+  serial_write(SERIAL_COM1_BASE, "[SYS - HEAP] Kernel Heap inicializado");
 
   
   // GDT
@@ -47,31 +47,14 @@ void kmain(unsigned int ebx)
   struct gdt gdt_global;
   struct gdt_seg_descriptor *adress_descriptor = descriptors;
 
-  gdt_global.adress = adress_descriptor;
-  gdt_global.size = (size * 8) - 1;
-
-  init_gdt(adress_descriptor, &gdt_global);
-  serial_write(SERIAL_COM1_BASE, "Iniciou GDT");
+  init_gdt(adress_descriptor, &gdt_global, size);
+  serial_write(SERIAL_COM1_BASE, "[SYS] Iniciou GDT");
 
   // IDT
   struct idt_descriptor idt[IDT_NUM_ENTRIES];
   struct idt idt_global;
 
-  idt_global.adress = idt;
-  idt_global.size = (IDT_NUM_ENTRIES * sizeof(struct idt_descriptor)) - 1;
-
-  init_idt_desc(0x08, (unsigned int)interrupt_handler_33, 0x8E, &idt[33]);
-  serial_write(SERIAL_COM1_BASE, "Iniciou handler de teclado");
-
-  load_lidt(&idt_global);
-  serial_write(SERIAL_COM1_BASE, "Iniciou IDT");
-
-  pic_init();
-  serial_write(SERIAL_COM1_BASE, "Iniciou PIC");
-
-  outb(PIC1_PORT_B, 0xFD);
-
-  serial_write(SERIAL_COM1_BASE, "Finalizou setup do kernel");
+  init_idt(&idt_global, idt);
 
   /* Cria PCB e entra em user mode */
   if (mod_start != 0 && mod_end != 0) {

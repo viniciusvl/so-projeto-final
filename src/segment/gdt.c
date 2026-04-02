@@ -11,7 +11,10 @@ void init_gdt_descriptor(unsigned int base, unsigned int limite, unsigned char a
 	s->base_24_31 = (base & 0xff000000) >> 24;
 }
 
-void init_gdt(struct gdt_seg_descriptor *gdt, struct gdt *gdt_global){
+void init_gdt(struct gdt_seg_descriptor *gdt, struct gdt *gdt_global, unsigned short size){
+	gdt_global->adress = gdt;
+	gdt_global->size = (size * 8) - 1;
+
 	/*Iniciando cada segmento*/
 	init_gdt_descriptor(0x0, 0x0, 0x0, 0x0, &gdt[0]);
     init_gdt_descriptor(0x0, 0xFFFFFFFF, 0x9B, 0xC, &gdt[1]);
