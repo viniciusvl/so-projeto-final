@@ -32,6 +32,9 @@ void init_idt(struct idt *idt_global, struct idt_descriptor *idt);
 /* Handler do teclado (assembly) */
 void interrupt_handler_33(void);
 
+/* Handler de syscall (assembly) - INT 0x80 */
+void syscall_handler_128(void);
+
 void interrupt_handler(unsigned int interrupt);
 
 #define PIC1_PORT_A 0x20

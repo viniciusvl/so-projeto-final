@@ -11,7 +11,15 @@
 #include "kernel/module_loader.h"
 #include "multiboot.h"
 #include "process/process.h"
+#include "segment/tss.h"
 
+
+/* GDT e IDT em storage estatico para nao serem corrompidos
+   quando o TSS troca a stack para kernel_stack_top em interrupts de ring 3 */
+static struct gdt_seg_descriptor gdt_descriptors[6];
+static struct gdt gdt_global;
+static struct idt idt_global;
+static struct idt_descriptor idt_entries[IDT_NUM_ENTRIES];
 
 void kmain(unsigned int ebx)
 {
@@ -41,20 +49,17 @@ void kmain(unsigned int ebx)
   serial_write(SERIAL_COM1_BASE, "[SYS - HEAP] Kernel Heap inicializado");
 
   
-  // GDT
-  unsigned short size = 5;
-  struct gdt_seg_descriptor descriptors[5];
-  struct gdt gdt_global;
-  struct gdt_seg_descriptor *adress_descriptor = descriptors;
+  // GDT (6 entradas: null + kernel code/data + user code/data + TSS)
+  extern uint32_t kernel_stack_top;
 
-  init_gdt(adress_descriptor, &gdt_global, size);
+  init_gdt(gdt_descriptors, &gdt_global, 6);
   serial_write(SERIAL_COM1_BASE, "[SYS] Iniciou GDT");
 
-  // IDT
-  struct idt idt_global; // armazena informações de tamanho e começo do IDT
-  struct idt_descriptor idt[IDT_NUM_ENTRIES];
+  // TSS (deve ser inicializado apos a GDT)
+  tss_init(0x10, (uint32_t)&kernel_stack_top, gdt_descriptors);
 
-  init_idt(&idt_global, idt);
+  // IDT
+  init_idt(&idt_global, idt_entries);
   
   /* Cria PCB e entra em user mode */ 
   if (mod_start != 0 && mod_end != 0) {

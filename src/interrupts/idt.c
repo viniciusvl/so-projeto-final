@@ -20,12 +20,21 @@ void init_idt(struct idt *idt_global, struct idt_descriptor *idt) {
   idt_global->size = (IDT_NUM_ENTRIES * sizeof(struct idt_descriptor)) - 1;
 
   init_idt_desc(
-    KERNEL_CODE_SEGMENT_OFFSET, 
-    (unsigned int)interrupt_handler_33, 
-    IDT_TYPE_KERNEL_PRIVILEGED, 
+    KERNEL_CODE_SEGMENT_OFFSET,
+    (unsigned int)interrupt_handler_33,
+    IDT_TYPE_KERNEL_PRIVILEGED,
     &idt[33]
   );
   serial_write(SERIAL_COM1_BASE, "[SYS - INTERRUPTS] Iniciou handler de teclado");
+
+  /* Syscall: INT 0x80 (128) com DPL=3 para permitir chamada de ring 3 */
+  init_idt_desc(
+    KERNEL_CODE_SEGMENT_OFFSET,
+    (unsigned int)syscall_handler_128,
+    IDT_TYPE_USER_PRIVILEGED,
+    &idt[128]
+  );
+  serial_write(SERIAL_COM1_BASE, "[SYS - INTERRUPTS] Registrou handler syscall (0x80)");
 
   load_lidt(idt_global);
   serial_write(SERIAL_COM1_BASE, "[SYS - INTERRUPTS] Iniciou IDT");

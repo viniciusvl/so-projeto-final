@@ -153,7 +153,7 @@ struct PCB *create_pcb(void)
     /* Configura registradores do PCB */
     pcb->eip    = 0x00000000;
     pcb->esp    = 0x00000000;
-    pcb->eflags = 0x00000000;
+    pcb->eflags = 0x00000200;  /* IF=1: habilita interrupts em user mode */
     pcb->cs     = USER_CODE_SEGMENT_SELECTOR;   /* 0x1B */
     pcb->ss     = USER_DATA_SEGMENT_SELECTOR;   /* 0x23 */
 

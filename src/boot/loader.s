@@ -1,5 +1,7 @@
 global loader
 global page_directory
+global kernel_stack
+global kernel_stack_top
 extern kmain
 
 MAGIC_NUMBER        equ 0x1BADB002
@@ -62,3 +64,4 @@ KERNEL_STACK_SIZE equ 4096
 
 kernel_stack:
     resb KERNEL_STACK_SIZE
+kernel_stack_top:
