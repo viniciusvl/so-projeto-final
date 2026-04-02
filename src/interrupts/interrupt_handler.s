@@ -13,18 +13,25 @@ interrupt_handler_%1:
 
 ; função que executa passos que as interrupções tem em comum
 common_interrupt_handler: 
-    push eax
+    ; Guarda valores antigos dos registradores
+    push eax 
     push ebx
 
-    ; o número da interrupção está em [esp + 8] (depois de eax e ebx)
+    ; Adiciona na pilha o número de interrupção que foi lançado
+    ; dword informa quantos bytes ler 
     push dword [esp + 8]
+
+    ; chama função do C
     call interrupt_handler
+    
+    ; Retira valor da interrupção do topo da pilha
     add esp, 4
 
-    ; restaurar registradores
+    ; pop retira da pilha e envia para registradores
     pop ebx
     pop eax
 
+    ; Faz pilha voltar ao estado original
     add esp, 8
 
     iret

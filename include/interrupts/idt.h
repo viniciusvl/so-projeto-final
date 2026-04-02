@@ -12,8 +12,8 @@
     Bytes 6-7: offset_high (bits 16-31 do endereço do handler)
 */
 struct idt_descriptor {
-  unsigned short offset_low;
-  unsigned short segment_selector;
+  unsigned short offset_low; // bit 0 a15
+  unsigned short segment_selector; // bit 16 a 31
   unsigned char reserved;
   unsigned char type_attr;
   unsigned short offset_high;

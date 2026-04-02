@@ -127,23 +127,51 @@ static void alloc_stack(uint32_t pdt_phys)
 
 /* ---- Funcao principal ---- */
 
-struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end)
+struct PCB *create_pcb(void)
 {
-    serial_write(SERIAL_COM1_BASE, "[process] create_pcb_grub_modules: inicio");
+    serial_write(SERIAL_COM1_BASE, "[process] create_pcb: inicio");
 
-    /* 3.1 - Aloca o PCB */
+    /* Aloca o PCB */
     struct PCB *pcb = (struct PCB *)kmalloc(sizeof(struct PCB));
     serial_write(SERIAL_COM1_BASE, "[process] PCB alocado em:");
     serial_write_hex((uint32_t)pcb);
 
-    /* 3.2 - Aloca a PDT (Page Directory Table) */
+    /* Aloca a PDT */
     uint32_t pdt_phys = alloc_page_table();
     pcb->pdt = pdt_phys;
 
     serial_write(SERIAL_COM1_BASE, "[process] PDT alocada em:");
     serial_write_hex(pdt_phys);
 
-    /* 3.3 - Aloca uma Page Table para PDT[0] (mapeia 0x00000000 - 0x003FFFFF) */
+    /* Copia a PDE do kernel (3GB) para a nova PDT */
+    uint32_t *pdt = (uint32_t *)paging_temp_map(pdt_phys);
+    pdt[KERNEL_PD_INDEX] = page_directory[KERNEL_PD_INDEX];
+    paging_temp_unmap();
+
+    serial_write(SERIAL_COM1_BASE, "[process] PDE do kernel copiada (index 768)");
+
+    /* Configura registradores do PCB */
+    pcb->eip    = 0x00000000;
+    pcb->esp    = 0x00000000;
+    pcb->eflags = 0x00000000;
+    pcb->cs     = USER_CODE_SEGMENT_SELECTOR;   /* 0x1B */
+    pcb->ss     = USER_DATA_SEGMENT_SELECTOR;   /* 0x23 */
+
+    serial_write(SERIAL_COM1_BASE, "[process] create_pcb: concluido");
+
+    return pcb;
+}
+
+struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end)
+{
+    serial_write(SERIAL_COM1_BASE, "[process] create_pcb_grub_modules: inicio");
+
+    /* Cria o PCB basico com PDT e registradores */
+    struct PCB *pcb = create_pcb();
+
+    uint32_t pdt_phys = pcb->pdt;
+
+    /* Aloca uma Page Table para PDT[0] (mapeia 0x00000000 - 0x003FFFFF) */
     uint32_t pt_phys = alloc_page_table();
 
     /* Insere a PT na PDT[0] com flags de user mode */
@@ -154,43 +182,19 @@ struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end)
     serial_write(SERIAL_COM1_BASE, "[process] PT alocada para PDT[0]:");
     serial_write_hex(pt_phys);
 
-    /* 3.5 - Aloca dois page frames na PT[0] e PT[1] */
+    /* Aloca dois page frames na PT[0] e PT[1] */
     alloc_page_frames(pt_phys);
 
-    /* 3.6 - Copia o binario do modulo GRUB para o primeiro page frame */
-    /* Recupera o endereco fisico do frame em PT[0] */
+    /* Copia o binario do modulo GRUB para o primeiro page frame */
     uint32_t *pt_mapped = (uint32_t *)paging_temp_map(pt_phys);
     uint32_t page_frame_1 = pt_mapped[0] & 0xFFFFF000;
     paging_temp_unmap();
 
     copy_module(page_frame_1, mod_start, mod_end);
 
-    /* 3.7 - Aloca a stack do processo (mapeada em 0xBFFFFFFB) */
+    /* Aloca a stack do processo (mapeada em 0xBFFFFFFB) */
     alloc_stack(pdt_phys);
     pcb->esp = 0xBFFFFFFB;
-
-    /* 3.8 - Copia a PDE do kernel (3GB) para a nova PDT */
-    pdt = (uint32_t *)paging_temp_map(pdt_phys);
-    pdt[KERNEL_PD_INDEX] = page_directory[KERNEL_PD_INDEX];
-    paging_temp_unmap();
-
-    serial_write(SERIAL_COM1_BASE, "[process] PDE do kernel copiada (index 768)");
-
-    /* Configura registradores do PCB */
-    pcb->eip    = 0x00000000;   /* entry point do codigo user mode */
-    pcb->eflags = 0x00000000;   /* interrupts desabilitadas por enquanto */
-    pcb->cs     = USER_CODE_SEGMENT_SELECTOR;   /* 0x1B */
-    pcb->ss     = USER_DATA_SEGMENT_SELECTOR;   /* 0x23 */
-
-    serial_write(SERIAL_COM1_BASE, "[process] PCB configurado:");
-    serial_write(SERIAL_COM1_BASE, "  eip=");
-    serial_write_hex(pcb->eip);
-    serial_write(SERIAL_COM1_BASE, "  esp=");
-    serial_write_hex(pcb->esp);
-    serial_write(SERIAL_COM1_BASE, "  cs=");
-    serial_write_hex(pcb->cs);
-    serial_write(SERIAL_COM1_BASE, "  ss=");
-    serial_write_hex(pcb->ss);
 
     serial_write(SERIAL_COM1_BASE, "[process] create_pcb_grub_modules: concluido");
     return pcb;

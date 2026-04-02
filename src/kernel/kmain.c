@@ -51,12 +51,12 @@ void kmain(unsigned int ebx)
   serial_write(SERIAL_COM1_BASE, "[SYS] Iniciou GDT");
 
   // IDT
+  struct idt idt_global; // armazena informações de tamanho e começo do IDT
   struct idt_descriptor idt[IDT_NUM_ENTRIES];
-  struct idt idt_global;
 
   init_idt(&idt_global, idt);
-
-  /* Cria PCB e entra em user mode */
+  
+  /* Cria PCB e entra em user mode */ 
   if (mod_start != 0 && mod_end != 0) {
     serial_write(SERIAL_COM1_BASE, "Criando PCB para modulo GRUB");
     struct PCB *pcb = create_pcb_grub_modules(mod_start, mod_end);
@@ -66,7 +66,7 @@ void kmain(unsigned int ebx)
   } else {
     serial_write(SERIAL_COM1_BASE, "Nenhum modulo encontrado");
   }
-
+  
   while(1) {
     asm volatile("hlt");
   }

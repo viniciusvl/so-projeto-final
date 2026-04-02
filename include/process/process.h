@@ -14,6 +14,9 @@ struct PCB {
     uint32_t ss;        /* Stack Segment */
 };
 
+/* Cria um PCB alocando apenas a PDT (sem page frames, stack ou codigo) */
+struct PCB *create_pcb(void);
+
 /* Cria um PCB para um modulo GRUB, configurando PDT, page tables, stack e codigo */
 struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end);
 

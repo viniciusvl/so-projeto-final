@@ -1,4 +1,7 @@
 ; Esse arquivo carrega a tabela de descrição de interrupções
+; Quando o usuário digita, o teclado envia para a CPU
+; Uma interrupção junto de um número
+; Interrupções são implementações em hardware
 
 global load_lidt
 
