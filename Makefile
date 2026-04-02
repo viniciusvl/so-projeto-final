@@ -48,8 +48,10 @@ compile_c_file:
 
 # Compilando módulos do userspace
 compile_modules:
-	@mkdir -p iso/modules
-	$(AS) -f bin src/modules_pre_compiled/program.s -o iso/modules/program
+	@mkdir -p build/modules iso/modules
+	$(AS) -f elf32 src/modules_pre_compiled/starter.s -o build/modules/starter.o
+	$(CC) -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -fno-pic -c src/modules_pre_compiled/program_module.c -o build/modules/program_module.o
+	ld -T linker/link_modules.ld -melf_i386 build/modules/starter.o build/modules/program_module.o -o iso/modules/program
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:
@@ -71,7 +73,7 @@ generate_iso_image:
 	iso
 
 clean:
-	rm -rf build/* out/* iso/boot/kernel.elf || true
+	rm -rf build/* out/* iso/boot/kernel.elf iso/modules/program || true
 
 run: all
 	bochs -f config/bochsrc.txt -q

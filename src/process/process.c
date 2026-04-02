@@ -18,6 +18,21 @@ extern uint32_t page_directory[];
 /* ---- Funções auxiliares ---- */
 
 /*
+ * alloc_page_table: aloca e zera uma Page Table.
+ */
+static uint32_t alloc_page_table(void)
+{
+    uint32_t pt_phys = pfa_alloc();
+
+    uint32_t *pt = (uint32_t *)paging_temp_map(pt_phys);
+    for (uint32_t i = 0; i < 1024; i++)
+        pt[i] = 0;
+    paging_temp_unmap();
+
+    return pt_phys;
+}
+
+/*
  * alloc_page_frames: aloca dois page frames consecutivos na Page Table.
  * PT[0] e PT[1] recebem frames fisicos com flags de user mode.
  */
@@ -91,14 +106,11 @@ static void alloc_stack(uint32_t pdt_phys)
     serial_write_hex(pt_index);
 
     /* Aloca page table para PDT[767] */
-    uint32_t pt_phys = pfa_alloc();
+    uint32_t pt_phys = alloc_page_table();
 
-    /* Zera a page table e insere o frame da stack */
-    uint32_t *pt = (uint32_t *)paging_temp_map(pt_phys);
-    for (uint32_t i = 0; i < 1024; i++)
-        pt[i] = 0;
-
+    /* Insere o frame da stack na page table */
     uint32_t stack_frame = pfa_alloc();
+    uint32_t *pt = (uint32_t *)paging_temp_map(pt_phys);
     pt[pt_index] = stack_frame | PTE_PRESENT | PTE_WRITABLE | PTE_USER;
     paging_temp_unmap();
 
@@ -125,29 +137,17 @@ struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end)
     serial_write_hex((uint32_t)pcb);
 
     /* 3.2 - Aloca a PDT (Page Directory Table) */
-    uint32_t pdt_phys = pfa_alloc();
+    uint32_t pdt_phys = alloc_page_table();
     pcb->pdt = pdt_phys;
 
     serial_write(SERIAL_COM1_BASE, "[process] PDT alocada em:");
     serial_write_hex(pdt_phys);
 
-    /* Zera toda a PDT */
-    uint32_t *pdt = (uint32_t *)paging_temp_map(pdt_phys);
-    for (uint32_t i = 0; i < 1024; i++)
-        pdt[i] = 0;
-    paging_temp_unmap();
-
     /* 3.3 - Aloca uma Page Table para PDT[0] (mapeia 0x00000000 - 0x003FFFFF) */
-    uint32_t pt_phys = pfa_alloc();
-
-    /* Zera a page table */
-    uint32_t *pt = (uint32_t *)paging_temp_map(pt_phys);
-    for (uint32_t i = 0; i < 1024; i++)
-        pt[i] = 0;
-    paging_temp_unmap();
+    uint32_t pt_phys = alloc_page_table();
 
     /* Insere a PT na PDT[0] com flags de user mode */
-    pdt = (uint32_t *)paging_temp_map(pdt_phys);
+    uint32_t *pdt = (uint32_t *)paging_temp_map(pdt_phys);
     pdt[0] = pt_phys | PDE_PRESENT | PDE_WRITABLE | PDE_USER;
     paging_temp_unmap();
 
