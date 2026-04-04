@@ -75,3 +75,66 @@ uint32_t scheduler_ready_count(void)
 {
     return ready_len;
 }
+
+static void scheduler_init_context_from_pcb(struct PCB *pcb)
+{
+    pcb->context.ebp = 0;
+    pcb->context.edi = 0;
+    pcb->context.esi = 0;
+    pcb->context.edx = 0;
+    pcb->context.ecx = 0;
+    pcb->context.ebx = 0;
+    pcb->context.eax = 0;
+    pcb->context.eip = pcb->eip;
+    pcb->context.cs = pcb->cs;
+    pcb->context.eflags = pcb->eflags;
+    pcb->context.user_esp = pcb->esp;
+    pcb->context.user_ss = pcb->ss;
+}
+
+int scheduler_schedule_from_context(struct process_context *context, int requeue_current)
+{
+    struct PCB *current;
+    struct PCB *next;
+
+    if (context == 0)
+        return -1;
+
+    current = scheduler_get_current();
+    if (current == 0)
+        return -1;
+
+    current->context = *context;
+    current->eip = context->eip;
+    current->esp = context->user_esp;
+    current->eflags = context->eflags;
+    current->cs = context->cs;
+    current->ss = context->user_ss;
+
+    if (requeue_current) {
+        current->state = PROCESS_STATE_READY;
+        if (scheduler_enqueue_ready(current) < 0) {
+            current->state = PROCESS_STATE_RUNNING;
+            return 0;
+        }
+    }
+
+    next = scheduler_pick_next();
+    if (next == 0) {
+        current->state = PROCESS_STATE_RUNNING;
+        return 0;
+    }
+
+    scheduler_set_current(next);
+    next->state = PROCESS_STATE_RUNNING;
+
+    if (next->pdt != current->pdt)
+        update_cr3(next->pdt);
+
+    if (next->context.cs == 0)
+        scheduler_init_context_from_pcb(next);
+
+    *context = next->context;
+    context->eflags |= 0x00000200;
+    return 1;
+}

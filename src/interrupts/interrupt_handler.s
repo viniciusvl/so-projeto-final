@@ -38,3 +38,9 @@ common_interrupt_handler:
 
 ; IRQ1 - teclado (interrupção 33)
 no_error_code_interrupt_handler 33
+
+; IRQ7 - pode ocorrer como interrupcao espuria (vetor 39)
+no_error_code_interrupt_handler 39
+
+; IRQ15 - espuria do PIC secundario (vetor 47)
+no_error_code_interrupt_handler 47

@@ -6,6 +6,7 @@
 #include "memory/paging.h"
 #include "memory/kheap.h"
 #include "interrupts/idt.h"
+#include "interrupts/pit.h"
 #include "io/io.h"
 #include "segment/gdt.h"
 #include "kernel/module_loader.h"
@@ -65,6 +66,9 @@ void kmain(unsigned int ebx)
 
   // IDT
   init_idt(&idt_global, idt_entries);
+
+  /* Timer preemptivo a cada 10ms */
+  pit_init(10);
 
   scheduler_init();
   

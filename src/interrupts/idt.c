@@ -21,11 +21,33 @@ void init_idt(struct idt *idt_global, struct idt_descriptor *idt) {
 
   init_idt_desc(
     KERNEL_CODE_SEGMENT_OFFSET,
+    (unsigned int)interrupt_handler_32,
+    IDT_TYPE_KERNEL_PRIVILEGED,
+    &idt[32]
+  );
+  serial_write(SERIAL_COM1_BASE, "[SYS - INTERRUPTS] Iniciou handler do timer");
+
+  init_idt_desc(
+    KERNEL_CODE_SEGMENT_OFFSET,
     (unsigned int)interrupt_handler_33,
     IDT_TYPE_KERNEL_PRIVILEGED,
     &idt[33]
   );
   serial_write(SERIAL_COM1_BASE, "[SYS - INTERRUPTS] Iniciou handler de teclado");
+
+  init_idt_desc(
+    KERNEL_CODE_SEGMENT_OFFSET,
+    (unsigned int)interrupt_handler_39,
+    IDT_TYPE_KERNEL_PRIVILEGED,
+    &idt[39]
+  );
+
+  init_idt_desc(
+    KERNEL_CODE_SEGMENT_OFFSET,
+    (unsigned int)interrupt_handler_47,
+    IDT_TYPE_KERNEL_PRIVILEGED,
+    &idt[47]
+  );
 
   /* Syscall: INT 0x80 (128) com DPL=3 para permitir chamada de ring 3 */
   init_idt_desc(
@@ -42,5 +64,6 @@ void init_idt(struct idt *idt_global, struct idt_descriptor *idt) {
   pic_init();
   serial_write(SERIAL_COM1_BASE, "[SYS - INTERRUPTS] Iniciou PIC");
 
-  outb(PIC1_PORT_B, 0xFD);
+  /* Habilita IRQ0 (timer) e IRQ1 (teclado) */
+  outb(PIC1_PORT_B, 0xFC);
 }

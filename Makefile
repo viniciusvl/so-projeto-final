@@ -1,4 +1,4 @@
-OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o build/process.o build/scheduler.o build/user_mode.o build/tss.o build/load_tss.o build/syscall_handler_asm.o build/syscall.o
+OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/timer_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/pit.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o build/process.o build/scheduler.o build/user_mode.o build/tss.o build/load_tss.o build/syscall_handler_asm.o build/syscall.o
 
 OBJECTC = kmain
 OBJECTA = loader
@@ -26,6 +26,7 @@ compile_assembly:
 	$(AS) $(ASFLAGS) src/segment/segment_selector.s -o build/config_segment_selector.o
 	$(AS) $(ASFLAGS) src/segment/far_jump.s -o build/far_jump.o
 	$(AS) $(ASFLAGS) src/interrupts/interrupt_handler.s -o build/interrupt_handler_asm.o
+	$(AS) $(ASFLAGS) src/interrupts/timer_handler.s -o build/timer_handler_asm.o
 	$(AS) $(ASFLAGS) src/interrupts/load_lidt.s -o build/load_lidt.o
 	$(AS) $(ASFLAGS) src/process/user_mode.s -o build/user_mode.o
 	$(AS) $(ASFLAGS) src/segment/load_tss.s -o build/load_tss.o
@@ -42,6 +43,7 @@ compile_c_file:
 	$(CC) $(CFLAGS) src/interrupts/interrupt_handler.c -o build/interrupt_handler.o
 	$(CC) $(CFLAGS) src/interrupts/pic.c -o build/pic.o
 	$(CC) $(CFLAGS) src/interrupts/idt.c -o build/idt.o
+	$(CC) $(CFLAGS) src/interrupts/pit.c -o build/pit.o
 	$(CC) $(CFLAGS) src/kernel/module_loader.c -o build/module_loader.o
 	$(CC) $(CFLAGS) src/memory/pfa.c -o build/pfa.o
 	$(CC) $(CFLAGS) src/memory/paging.c -o build/paging.o

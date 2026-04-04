@@ -30,7 +30,10 @@ void init_idt_desc(unsigned short select, unsigned int offset,
 void init_idt(struct idt *idt_global, struct idt_descriptor *idt);
 
 /* Handler do teclado (assembly) */
+void interrupt_handler_32(void);
 void interrupt_handler_33(void);
+void interrupt_handler_39(void);
+void interrupt_handler_47(void);
 
 /* Handler de syscall (assembly) - INT 0x80 */
 void syscall_handler_128(void);
