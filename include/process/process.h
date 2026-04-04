@@ -7,6 +7,8 @@
 #define PROCESS_STATE_RUNNING 1
 #define PROCESS_STATE_BLOCKED 2
 
+#define PROCESS_KERNEL_STACK_SIZE 4096
+
 struct process_context {
     uint32_t ebp;
     uint32_t edi;
@@ -36,7 +38,8 @@ struct PCB {
     uint32_t cs;        /* Code Segment */
     uint32_t ss;        /* Stack Segment */
 
-    uint32_t kernel_stack_frame; /* Snapshot fisico da stack do kernel */
+    uint32_t kernel_stack_base;  /* Base virtual da kernel stack do processo */
+    uint32_t kernel_esp0;        /* Topo (esp0) usado pelo TSS em ring3 -> ring0 */
 
     uint32_t state;     /* Estado para escalonamento cooperativo */
 

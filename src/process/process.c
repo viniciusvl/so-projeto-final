@@ -3,6 +3,7 @@
 #include "memory/paging.h"
 #include "memory/kheap.h"
 #include "scheduler/scheduler.h"
+#include "segment/tss.h"
 #include "io/serial_ports.h"
 #include "io/io.h"
 
@@ -126,6 +127,25 @@ static void alloc_stack(uint32_t pdt_phys)
     serial_write(SERIAL_COM1_BASE, "[process] alloc_stack: concluido");
 }
 
+static int alloc_kernel_stack(struct PCB *pcb)
+{
+    uint8_t *kstack;
+
+    if (pcb == 0)
+        return -1;
+
+    kstack = (uint8_t *)kmalloc(PROCESS_KERNEL_STACK_SIZE);
+    if (kstack == 0)
+        return -1;
+
+    for (uint32_t i = 0; i < PROCESS_KERNEL_STACK_SIZE; i++)
+        kstack[i] = 0;
+
+    pcb->kernel_stack_base = (uint32_t)kstack;
+    pcb->kernel_esp0 = (uint32_t)kstack + PROCESS_KERNEL_STACK_SIZE - 4;
+    return 0;
+}
+
 /* ---- Funcao principal ---- */
 
 struct PCB *create_pcb(void)
@@ -134,6 +154,9 @@ struct PCB *create_pcb(void)
 
     /* Aloca o PCB */
     struct PCB *pcb = (struct PCB *)kmalloc(sizeof(struct PCB));
+    if (pcb == 0)
+        return 0;
+
     serial_write(SERIAL_COM1_BASE, "[process] PCB alocado em:");
     serial_write_hex((uint32_t)pcb);
 
@@ -142,6 +165,11 @@ struct PCB *create_pcb(void)
 
     /* Aloca a PDT */
     uint32_t pdt_phys = alloc_page_table();
+    if (pdt_phys == 0) {
+        kfree(pcb);
+        return 0;
+    }
+
     pcb->pdt = pdt_phys;
 
     serial_write(SERIAL_COM1_BASE, "[process] PDT alocada em:");
@@ -160,7 +188,8 @@ struct PCB *create_pcb(void)
     pcb->eflags = 0x00000200;  /* IF=1: habilita interrupts em user mode */
     pcb->cs     = USER_CODE_SEGMENT_SELECTOR;   /* 0x1B */
     pcb->ss     = USER_DATA_SEGMENT_SELECTOR;   /* 0x23 */
-    pcb->kernel_stack_frame = 0;
+    pcb->kernel_stack_base = 0;
+    pcb->kernel_esp0 = 0;
     pcb->state  = PROCESS_STATE_READY;
 
     pcb->context.ebp = 0;
@@ -176,6 +205,12 @@ struct PCB *create_pcb(void)
     pcb->context.user_esp = 0;
     pcb->context.user_ss = 0;
 
+    if (alloc_kernel_stack(pcb) < 0) {
+        pfa_free(pdt_phys);
+        kfree(pcb);
+        return 0;
+    }
+
     serial_write(SERIAL_COM1_BASE, "[process] create_pcb: concluido");
 
     return pcb;
@@ -187,6 +222,8 @@ struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end)
 
     /* Cria o PCB basico com PDT e registradores */
     struct PCB *pcb = create_pcb();
+    if (pcb == 0)
+        return 0;
 
     uint32_t pdt_phys = pcb->pdt;
 
@@ -223,11 +260,15 @@ struct PCB *create_pcb_grub_modules(uint32_t mod_start, uint32_t mod_end)
 
 void run_user_mode_module(struct PCB *pcb)
 {
+    if (pcb == 0)
+        return;
+
     serial_write(SERIAL_COM1_BASE, "[process] run_user_mode_module: trocando cr3");
     serial_write_hex(pcb->pdt);
 
     /* Atualiza cr3 para a PDT do processo */
     update_cr3(pcb->pdt);
+    tss_set_kernel_stack(pcb->kernel_esp0);
 
     scheduler_set_current(pcb);
     pcb->state = PROCESS_STATE_RUNNING;

@@ -1,6 +1,7 @@
 #include "interrupts/pit.h"
 #include "interrupts/idt.h"
 #include "io/io.h"
+#include "process/process.h"
 #include "scheduler/scheduler.h"
 
 #define PIT_BASE_FREQUENCY_HZ 1193182U
@@ -36,13 +37,55 @@ uint32_t pit_get_ticks(void)
     return pit_ticks;
 }
 
-void timer_interrupt_handler(struct process_context *frame)
+static void frame_user_to_context(const struct pit_irq_frame_user *frame,
+                                  struct process_context *ctx)
 {
+    ctx->ebp = frame->common.ebp;
+    ctx->edi = frame->common.edi;
+    ctx->esi = frame->common.esi;
+    ctx->edx = frame->common.edx;
+    ctx->ecx = frame->common.ecx;
+    ctx->ebx = frame->common.ebx;
+    ctx->eax = frame->common.eax;
+    ctx->eip = frame->common.eip;
+    ctx->cs = frame->common.cs;
+    ctx->eflags = frame->common.eflags;
+    ctx->user_esp = frame->user_esp;
+    ctx->user_ss = frame->user_ss;
+}
+
+static void frame_context_to_user(struct pit_irq_frame_user *frame,
+                                  const struct process_context *ctx)
+{
+    frame->common.ebp = ctx->ebp;
+    frame->common.edi = ctx->edi;
+    frame->common.esi = ctx->esi;
+    frame->common.edx = ctx->edx;
+    frame->common.ecx = ctx->ecx;
+    frame->common.ebx = ctx->ebx;
+    frame->common.eax = ctx->eax;
+    frame->common.eip = ctx->eip;
+    frame->common.cs = ctx->cs;
+    frame->common.eflags = ctx->eflags;
+    frame->user_esp = ctx->user_esp;
+    frame->user_ss = ctx->user_ss;
+}
+
+void timer_interrupt_handler(struct pit_irq_frame *frame)
+{
+    struct process_context context;
+
     pit_ticks++;
 
-    /* Preempta apenas quando a interrupcao veio de ring 3. */
-    if (frame != 0 && (frame->cs & 0x3) == 0x3)
-        scheduler_schedule_from_context(frame, 1);
+    /* Ring 3: frame possui SS/ESP de user e pode ser escalonado. */
+    if (frame != 0 && (frame->cs & 0x3) == 0x3) {
+        struct pit_irq_frame_user *user_frame = (struct pit_irq_frame_user *)frame;
+
+        frame_user_to_context(user_frame, &context);
+
+        if (scheduler_schedule_from_context(&context, 1) > 0)
+            frame_context_to_user(user_frame, &context);
+    }
 
     /* EOI no PIC mestre para liberar proximas IRQ0. */
     pic_acknowledge(32);

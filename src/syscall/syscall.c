@@ -16,7 +16,6 @@
 #define USER_DATA_SELECTOR_R3    (0x20 | 0x3)
 
 extern uint32_t page_directory[];
-extern uint32_t kernel_stack_top;
 
 static void destroy_user_space(uint32_t pdt_phys);
 
@@ -180,21 +179,23 @@ static uint32_t clone_user_space(uint32_t parent_pdt_phys)
     return child_pdt_phys;
 }
 
-static uint32_t clone_current_kernel_stack_page(void)
+static int alloc_process_kernel_stack(struct PCB *pcb)
 {
-    uint32_t child_kstack_frame = pfa_alloc();
+    uint8_t *kstack;
 
-    if (child_kstack_frame == 0)
-        return 0;
+    if (pcb == 0)
+        return -1;
 
-    uint8_t *dst = (uint8_t *)paging_temp_map(child_kstack_frame);
-    uint8_t *src = (uint8_t *)((uint32_t)&kernel_stack_top - PAGE_SIZE);
+    kstack = (uint8_t *)kmalloc(PROCESS_KERNEL_STACK_SIZE);
+    if (kstack == 0)
+        return -1;
 
-    for (uint32_t i = 0; i < PAGE_SIZE; i++)
-        dst[i] = src[i];
+    for (uint32_t i = 0; i < PROCESS_KERNEL_STACK_SIZE; i++)
+        kstack[i] = 0;
 
-    paging_temp_unmap();
-    return child_kstack_frame;
+    pcb->kernel_stack_base = (uint32_t)kstack;
+    pcb->kernel_esp0 = (uint32_t)kstack + PROCESS_KERNEL_STACK_SIZE - 4;
+    return 0;
 }
 
 static void save_context_from_syscall_frame(struct process_context *ctx,
@@ -432,7 +433,6 @@ static uint32_t sys_fork(struct syscall_frame *frame)
     struct PCB *child;
     uint32_t child_pid;
     uint32_t child_pdt;
-    uint32_t child_kstack;
 
     if (parent == 0) {
         serial_write(SERIAL_COM1_BASE, "[SYSCALL] fork: processo corrente ausente");
@@ -450,7 +450,8 @@ static uint32_t sys_fork(struct syscall_frame *frame)
     child->pid = child_pid;
     child->ppid = parent->pid;
     child->state = PROCESS_STATE_READY;
-    child->kernel_stack_frame = 0;
+    child->kernel_stack_base = 0;
+    child->kernel_esp0 = 0;
     child->pdt = 0;
 
     child_pdt = clone_user_space(parent->pdt);
@@ -460,8 +461,7 @@ static uint32_t sys_fork(struct syscall_frame *frame)
         return (uint32_t)-1;
     }
 
-    child_kstack = clone_current_kernel_stack_page();
-    if (child_kstack == 0) {
+    if (alloc_process_kernel_stack(child) < 0) {
         destroy_user_space(child_pdt);
         kfree(child);
         serial_write(SERIAL_COM1_BASE, "[SYSCALL] fork: falha ao clonar kstack");
@@ -469,7 +469,6 @@ static uint32_t sys_fork(struct syscall_frame *frame)
     }
 
     child->pdt = child_pdt;
-    child->kernel_stack_frame = child_kstack;
 
     child->eip = frame->eip;
     child->esp = frame->user_esp;
@@ -481,7 +480,7 @@ static uint32_t sys_fork(struct syscall_frame *frame)
     child->context.eax = 0;
 
     if (scheduler_enqueue_ready(child) < 0) {
-        pfa_free(child_kstack);
+        kfree((void *)child->kernel_stack_base);
         destroy_user_space(child_pdt);
         kfree(child);
         serial_write(SERIAL_COM1_BASE, "[SYSCALL] fork: fila ready cheia");

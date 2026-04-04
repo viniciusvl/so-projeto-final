@@ -1,5 +1,6 @@
 #include "scheduler/scheduler.h"
 #include "process/process.h"
+#include "segment/tss.h"
 
 static struct PCB *current_pcb;
 
@@ -130,6 +131,8 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
 
     if (next->pdt != current->pdt)
         update_cr3(next->pdt);
+
+    tss_set_kernel_stack(next->kernel_esp0);
 
     if (next->context.cs == 0)
         scheduler_init_context_from_pcb(next);
