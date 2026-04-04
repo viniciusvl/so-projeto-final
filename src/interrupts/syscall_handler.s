@@ -21,11 +21,15 @@ syscall_handler_128:
     push edi
     push ebp
 
-    ; Passa o numero da syscall (valor original de eax) como argumento
-    ; eax foi o primeiro push, esta em [esp + 24] (6 pushes * 4 bytes acima)
-    push dword [esp + 24]
+    ; Passa para o dispatcher:
+    ;   arg1: numero da syscall (EAX salvo)
+    ;   arg2: ponteiro para a syscall_frame atual (ESP apos pushes)
+    mov eax, [esp + 24]
+    lea ecx, [esp]
+    push ecx
+    push eax
     call syscall_dispatcher
-    add esp, 4
+    add esp, 8
 
     ; Coloca o valor de retorno (eax) no slot salvo de eax na stack
     ; Para que ao restaurar, eax contenha o retorno da syscall

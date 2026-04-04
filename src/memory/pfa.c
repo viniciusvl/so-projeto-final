@@ -65,3 +65,16 @@ uint32_t pfa_alloc()
 
     return 0; // sem memória
 }
+
+void pfa_free(uint32_t addr)
+{
+    uint32_t frame = addr / PAGE_SIZE;
+
+    if (frame < start_frame || frame >= total_frames)
+        return;
+
+    uint32_t byte = frame / 8;
+    uint32_t bit  = frame % 8;
+
+    bitmap[byte] &= ~(1 << bit);
+}

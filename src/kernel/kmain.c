@@ -11,6 +11,7 @@
 #include "kernel/module_loader.h"
 #include "multiboot.h"
 #include "process/process.h"
+#include "scheduler/scheduler.h"
 #include "segment/tss.h"
 
 
@@ -26,14 +27,18 @@ void kmain(unsigned int ebx)
 
   extern uint32_t kernel_physical_end;
 
+  multiboot_info_t *mbinfo = (multiboot_info_t *)ebx;
+
   // Define memória livre
   uint32_t mem_start = ((uint32_t)&kernel_physical_end + 0xFFF) & ~0xFFF;
   uint32_t mem_end   = 64 * 1024 * 1024;
 
   // Módulos GRUB (antes de pfa_init para passar o range)
-  multiboot_module_t *mod = get_module_list((multiboot_info_t *) ebx);
+  multiboot_module_t *mod = get_module_list(mbinfo);
   uint32_t mod_start = mod ? mod->mod_start : 0;
   uint32_t mod_end   = mod ? mod->mod_end   : 0;
+
+  module_loader_set_modules(mod, mbinfo->mods_count);
 
   // Inicializa PFA (reserva frames do módulo internamente)
   pfa_init(mem_start, mem_end, mod_start, mod_end);
@@ -60,6 +65,8 @@ void kmain(unsigned int ebx)
 
   // IDT
   init_idt(&idt_global, idt_entries);
+
+  scheduler_init();
   
   /* Cria PCB e entra em user mode */ 
   if (mod_start != 0 && mod_end != 0) {

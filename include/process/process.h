@@ -3,7 +3,30 @@
 
 #include <stdint.h>
 
+#define PROCESS_STATE_READY   0
+#define PROCESS_STATE_RUNNING 1
+#define PROCESS_STATE_BLOCKED 2
+
+struct process_context {
+    uint32_t ebp;
+    uint32_t edi;
+    uint32_t esi;
+    uint32_t edx;
+    uint32_t ecx;
+    uint32_t ebx;
+    uint32_t eax;
+
+    uint32_t eip;
+    uint32_t cs;
+    uint32_t eflags;
+    uint32_t user_esp;
+    uint32_t user_ss;
+};
+
 struct PCB {
+    uint32_t pid;       /* Process ID */
+    uint32_t ppid;      /* Parent Process ID */
+
     uint32_t pdt;       /* Page Directory Table (endereço fisico) */
 
     uint32_t eip;       /* Instruction Pointer */
@@ -12,6 +35,12 @@ struct PCB {
 
     uint32_t cs;        /* Code Segment */
     uint32_t ss;        /* Stack Segment */
+
+    uint32_t kernel_stack_frame; /* Snapshot fisico da stack do kernel */
+
+    uint32_t state;     /* Estado para escalonamento cooperativo */
+
+    struct process_context context; /* Contexto salvo para scheduler cooperativo */
 };
 
 /* Cria um PCB alocando apenas a PDT (sem page frames, stack ou codigo) */

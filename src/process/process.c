@@ -2,6 +2,7 @@
 #include "memory/pfa.h"
 #include "memory/paging.h"
 #include "memory/kheap.h"
+#include "scheduler/scheduler.h"
 #include "io/serial_ports.h"
 #include "io/io.h"
 
@@ -136,6 +137,9 @@ struct PCB *create_pcb(void)
     serial_write(SERIAL_COM1_BASE, "[process] PCB alocado em:");
     serial_write_hex((uint32_t)pcb);
 
+    pcb->pid = scheduler_allocate_pid();
+    pcb->ppid = 0;
+
     /* Aloca a PDT */
     uint32_t pdt_phys = alloc_page_table();
     pcb->pdt = pdt_phys;
@@ -156,6 +160,21 @@ struct PCB *create_pcb(void)
     pcb->eflags = 0x00000200;  /* IF=1: habilita interrupts em user mode */
     pcb->cs     = USER_CODE_SEGMENT_SELECTOR;   /* 0x1B */
     pcb->ss     = USER_DATA_SEGMENT_SELECTOR;   /* 0x23 */
+    pcb->kernel_stack_frame = 0;
+    pcb->state  = PROCESS_STATE_READY;
+
+    pcb->context.ebp = 0;
+    pcb->context.edi = 0;
+    pcb->context.esi = 0;
+    pcb->context.edx = 0;
+    pcb->context.ecx = 0;
+    pcb->context.ebx = 0;
+    pcb->context.eax = 0;
+    pcb->context.eip = 0;
+    pcb->context.cs = 0;
+    pcb->context.eflags = 0;
+    pcb->context.user_esp = 0;
+    pcb->context.user_ss = 0;
 
     serial_write(SERIAL_COM1_BASE, "[process] create_pcb: concluido");
 
@@ -209,6 +228,9 @@ void run_user_mode_module(struct PCB *pcb)
 
     /* Atualiza cr3 para a PDT do processo */
     update_cr3(pcb->pdt);
+
+    scheduler_set_current(pcb);
+    pcb->state = PROCESS_STATE_RUNNING;
 
     serial_write(SERIAL_COM1_BASE, "[process] run_user_mode_module: entrando em user mode");
 

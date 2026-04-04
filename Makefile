@@ -1,4 +1,4 @@
-OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o build/process.o build/user_mode.o build/tss.o build/load_tss.o build/syscall_handler_asm.o build/syscall.o
+OBJECTS = build/loader.o build/kmain.o build/outb.o build/inb.o build/io_c.o build/serial_ports.o build/lgdt_f.o build/config_segment_selector.o build/far_jump.o build/gdt.o build/keyboard.o build/interrupt_handler.o build/interrupt_handler_asm.o build/pic.o build/load_lidt.o build/idt.o build/module_loader.o build/pfa.o build/paging.o build/kheap.o build/process.o build/scheduler.o build/user_mode.o build/tss.o build/load_tss.o build/syscall_handler_asm.o build/syscall.o
 
 OBJECTC = kmain
 OBJECTA = loader
@@ -47,6 +47,7 @@ compile_c_file:
 	$(CC) $(CFLAGS) src/memory/paging.c -o build/paging.o
 	$(CC) $(CFLAGS) src/memory/kheap.c -o build/kheap.o
 	$(CC) $(CFLAGS) src/process/process.c -o build/process.o
+	$(CC) $(CFLAGS) src/scheduler/scheduler.c -o build/scheduler.o
 	$(CC) $(CFLAGS) src/segment/tss.c -o build/tss.o
 	$(CC) $(CFLAGS) src/syscall/syscall.c -o build/syscall.o
 
