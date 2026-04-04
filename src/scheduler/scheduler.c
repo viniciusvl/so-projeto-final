@@ -66,6 +66,11 @@ struct PCB *scheduler_dequeue_ready(void)
     return pcb;
 }
 
+struct PCB *scheduler_pick_next(void)
+{
+    return scheduler_dequeue_ready();
+}
+
 uint32_t scheduler_ready_count(void)
 {
     return ready_len;

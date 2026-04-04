@@ -214,6 +214,23 @@ static void save_context_from_syscall_frame(struct process_context *ctx,
     ctx->user_ss = frame->user_ss;
 }
 
+static void restore_context_to_syscall_frame(struct syscall_frame *frame,
+                                             const struct process_context *ctx)
+{
+    frame->ebp = ctx->ebp;
+    frame->edi = ctx->edi;
+    frame->esi = ctx->esi;
+    frame->edx = ctx->edx;
+    frame->ecx = ctx->ecx;
+    frame->ebx = ctx->ebx;
+    frame->eax = ctx->eax;
+    frame->eip = ctx->eip;
+    frame->cs = ctx->cs;
+    frame->eflags = ctx->eflags;
+    frame->user_esp = ctx->user_esp;
+    frame->user_ss = ctx->user_ss;
+}
+
 static void destroy_user_space(uint32_t pdt_phys)
 {
     if (pdt_phys == 0)
@@ -492,6 +509,65 @@ static uint32_t sys_fork(struct syscall_frame *frame)
     return child_pid;
 }
 
+static uint32_t sys_yield(struct syscall_frame *frame)
+{
+    struct PCB *current = scheduler_get_current();
+    struct PCB *next;
+
+    if (current == 0) {
+        serial_write(SERIAL_COM1_BASE, "[SYSCALL] yield: processo corrente ausente");
+        return (uint32_t)-1;
+    }
+
+    /* Salva contexto completo do processo atual no PCB. */
+    save_context_from_syscall_frame(&current->context, frame);
+    current->eip = frame->eip;
+    current->esp = frame->user_esp;
+    current->eflags = frame->eflags;
+    current->cs = frame->cs;
+    current->ss = frame->user_ss;
+
+    current->state = PROCESS_STATE_READY;
+    if (scheduler_enqueue_ready(current) < 0) {
+        current->state = PROCESS_STATE_RUNNING;
+        serial_write(SERIAL_COM1_BASE, "[SYSCALL] yield: fila ready cheia");
+        return 0;
+    }
+
+    next = scheduler_pick_next();
+    if (next == 0) {
+        current->state = PROCESS_STATE_RUNNING;
+        return 0;
+    }
+
+    scheduler_set_current(next);
+    next->state = PROCESS_STATE_RUNNING;
+
+    if (next->pdt != current->pdt)
+        update_cr3(next->pdt);
+
+    /* First-run: se não há contexto salvo, usa estado inicial do PCB. */
+    if (next->context.cs == 0) {
+        next->context.ebp = 0;
+        next->context.edi = 0;
+        next->context.esi = 0;
+        next->context.edx = 0;
+        next->context.ecx = 0;
+        next->context.ebx = 0;
+        next->context.eax = 0;
+        next->context.eip = next->eip;
+        next->context.cs = next->cs;
+        next->context.eflags = next->eflags;
+        next->context.user_esp = next->esp;
+        next->context.user_ss = next->ss;
+    }
+
+    restore_context_to_syscall_frame(frame, &next->context);
+    frame->eflags |= 0x00000200;
+
+    return next->context.eax;
+}
+
 uint32_t syscall_dispatcher(uint32_t syscall_number, struct syscall_frame *frame)
 {
     serial_write(SERIAL_COM1_BASE, "[SYSCALL] syscall recebida: ");
@@ -511,6 +587,9 @@ uint32_t syscall_dispatcher(uint32_t syscall_number, struct syscall_frame *frame
 
         case SYSCALL_FORK:
             return sys_fork(frame);
+
+        case SYSCALL_YIELD:
+            return sys_yield(frame);
 
         default:
             serial_write(SERIAL_COM1_BASE, "[SYSCALL] syscall desconhecida!");

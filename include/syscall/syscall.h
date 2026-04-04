@@ -8,6 +8,7 @@
 #define SYSCALL_WRITE 1
 #define SYSCALL_EXEC  2
 #define SYSCALL_FORK  3
+#define SYSCALL_YIELD 4
 
 /*
  * Layout da stack no syscall handler apos salvar registradores:
