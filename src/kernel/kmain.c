@@ -80,7 +80,7 @@ void kmain(unsigned int ebx)
    *   SCHEDULER_POLICY_SJF  - Shortest Job First
    *   SCHEDULER_POLICY_RR   - Round Robin
    */
-  scheduler_set_policy(SCHEDULER_POLICY_RR);
+  scheduler_set_policy(SCHEDULER_POLICY_FCFS);
   
   /* Cria PCB e entra em user mode */ 
   if (mod_start != 0 && mod_end != 0) {
