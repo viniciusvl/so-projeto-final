@@ -43,6 +43,8 @@ struct PCB {
 
     uint32_t state;     /* Estado para escalonamento cooperativo */
 
+    uint32_t burst_time; /* Tempo de execucao estimado (usado pelo SJF) */
+
     struct process_context context; /* Contexto salvo para scheduler cooperativo */
 };
 
