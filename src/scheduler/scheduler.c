@@ -4,6 +4,9 @@
 
 static struct PCB *current_pcb;
 
+/* Controle global: 0 = cooperativo, 1 = preemptivo. */
+volatile uint8_t preemption_enabled = 0;
+
 static uint32_t next_pid = 1;
 static struct PCB *ready_queue[SCHEDULER_READY_QUEUE_CAPACITY];
 static uint32_t ready_head;
@@ -13,10 +16,21 @@ static uint32_t ready_len;
 void scheduler_init(void)
 {
     current_pcb = 0;
+    preemption_enabled = 0;
     next_pid = 1;
     ready_head = 0;
     ready_tail = 0;
     ready_len = 0;
+}
+
+void kernel_enable_preemption(void)
+{
+    preemption_enabled = 1;
+}
+
+void kernel_disable_preemption(void)
+{
+    preemption_enabled = 0;
 }
 
 uint32_t scheduler_allocate_pid(void)

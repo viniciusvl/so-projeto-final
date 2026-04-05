@@ -8,8 +8,13 @@
 struct PCB;
 struct process_context;
 
+extern volatile uint8_t preemption_enabled;
+
 void scheduler_init(void);
 uint32_t scheduler_allocate_pid(void);
+
+void kernel_enable_preemption(void);
+void kernel_disable_preemption(void);
 
 void scheduler_set_current(struct PCB *pcb);
 struct PCB *scheduler_get_current(void);

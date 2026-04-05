@@ -67,7 +67,7 @@ void kmain(unsigned int ebx)
   // IDT
   init_idt(&idt_global, idt_entries);
 
-  /* Timer preemptivo a cada 10ms */
+  /* Timer preemptivo a cada 10ms (É opcional dependendo da flag global em "scheduler.c")*/
   pit_init(10);
 
   scheduler_init();

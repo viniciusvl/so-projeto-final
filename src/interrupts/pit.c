@@ -78,7 +78,7 @@ void timer_interrupt_handler(struct pit_irq_frame *frame)
     pit_ticks++;
 
     /* Ring 3: frame possui SS/ESP de user e pode ser escalonado. */
-    if (frame != 0 && (frame->cs & 0x3) == 0x3) {
+    if (preemption_enabled && frame != 0 && (frame->cs & 0x3) == 0x3) {
         struct pit_irq_frame_user *user_frame = (struct pit_irq_frame_user *)frame;
 
         frame_user_to_context(user_frame, &context);
