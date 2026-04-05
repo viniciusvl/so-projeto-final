@@ -71,6 +71,16 @@ void kmain(unsigned int ebx)
   pit_init(10);
 
   scheduler_init();
+
+  /* Define o quantum (time slice) para Round Robin: 3 ticks = 30ms (PIT a 10ms) */
+  scheduler_set_quantum(3);
+
+  /* Seleciona a politica de escalonamento:
+   *   SCHEDULER_POLICY_FCFS - First Come First Served (padrao)
+   *   SCHEDULER_POLICY_SJF  - Shortest Job First
+   *   SCHEDULER_POLICY_RR   - Round Robin
+   */
+  scheduler_set_policy(SCHEDULER_POLICY_RR);
   
   /* Cria PCB e entra em user mode */ 
   if (mod_start != 0 && mod_end != 0) {

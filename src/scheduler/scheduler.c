@@ -13,6 +13,15 @@ static uint32_t ready_head;
 static uint32_t ready_tail;
 static uint32_t ready_len;
 
+/* Politica de escalonamento ativa (FCFS padrao) */
+static uint32_t scheduling_policy = SCHEDULER_POLICY_FCFS;
+
+/* Quantum para Round Robin (em ticks do PIT) */
+static uint32_t quantum_ticks = 1;
+
+/* Contador de ticks restantes para o processo corrente (RR) */
+static uint32_t remaining_ticks;
+
 void scheduler_init(void)
 {
     current_pcb = 0;
@@ -21,6 +30,25 @@ void scheduler_init(void)
     ready_head = 0;
     ready_tail = 0;
     ready_len = 0;
+    remaining_ticks = quantum_ticks;
+}
+
+void scheduler_set_policy(uint32_t policy)
+{
+    scheduling_policy = policy;
+}
+
+void scheduler_set_quantum(uint32_t ticks)
+{
+    if (ticks == 0)
+        ticks = 1;
+    quantum_ticks = ticks;
+    remaining_ticks = ticks;
+}
+
+uint32_t scheduler_get_quantum(void)
+{
+    return quantum_ticks;
 }
 
 void kernel_enable_preemption(void)
@@ -81,9 +109,67 @@ struct PCB *scheduler_dequeue_ready(void)
     return pcb;
 }
 
+/*
+ * scheduler_dequeue_sjf: retira da fila o processo com menor burst_time.
+ * Percorre toda a fila circular para encontrar o menor valor.
+ */
+static struct PCB *scheduler_dequeue_sjf(void)
+{
+    uint32_t i;
+    uint32_t best_index;
+    uint32_t best_burst;
+    struct PCB *best_pcb;
+
+    if (ready_len == 0)
+        return 0;
+
+    /* Encontra o indice (relativo a head) do processo com menor burst_time */
+    best_index = 0;
+    best_burst = ready_queue[ready_head]->burst_time;
+
+    for (i = 1; i < ready_len; i++) {
+        uint32_t idx = (ready_head + i) % SCHEDULER_READY_QUEUE_CAPACITY;
+        if (ready_queue[idx]->burst_time < best_burst) {
+            best_burst = ready_queue[idx]->burst_time;
+            best_index = i;
+        }
+    }
+
+    /* Indice absoluto na fila circular */
+    uint32_t abs_index = (ready_head + best_index) % SCHEDULER_READY_QUEUE_CAPACITY;
+    best_pcb = ready_queue[abs_index];
+
+    /* Remove o elemento deslocando os posteriores para frente */
+    for (i = best_index; i < ready_len - 1; i++) {
+        uint32_t dst = (ready_head + i) % SCHEDULER_READY_QUEUE_CAPACITY;
+        uint32_t src = (ready_head + i + 1) % SCHEDULER_READY_QUEUE_CAPACITY;
+        ready_queue[dst] = ready_queue[src];
+    }
+
+    /* Ajusta o tail */
+    if (ready_tail == 0)
+        ready_tail = SCHEDULER_READY_QUEUE_CAPACITY - 1;
+    else
+        ready_tail--;
+    ready_len--;
+
+    return best_pcb;
+}
+
 struct PCB *scheduler_pick_next(void)
 {
-    return scheduler_dequeue_ready();
+    switch (scheduling_policy) {
+        case SCHEDULER_POLICY_SJF:
+            return scheduler_dequeue_sjf();
+
+        case SCHEDULER_POLICY_RR:
+            /* RR usa a mesma fila FIFO; a preempcao eh controlada pelo quantum */
+            return scheduler_dequeue_ready();
+
+        case SCHEDULER_POLICY_FCFS:
+        default:
+            return scheduler_dequeue_ready();
+    }
 }
 
 uint32_t scheduler_ready_count(void)
@@ -119,6 +205,19 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
     if (current == 0)
         return -1;
 
+    /*
+     * Round Robin: so troca de processo quando o quantum esgota.
+     * Se ainda tem ticks restantes, decrementa e permanece no processo atual.
+     */
+    if (scheduling_policy == SCHEDULER_POLICY_RR && requeue_current) {
+        if (remaining_ticks > 1) {
+            remaining_ticks--;
+            return 0;
+        }
+        /* Quantum esgotado: reseta e continua para trocar de processo */
+        remaining_ticks = quantum_ticks;
+    }
+
     current->context = *context;
     current->eip = context->eip;
     current->esp = context->user_esp;
@@ -142,6 +241,10 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
 
     scheduler_set_current(next);
     next->state = PROCESS_STATE_RUNNING;
+
+    /* Reset do quantum ao trocar para novo processo (RR) */
+    if (scheduling_policy == SCHEDULER_POLICY_RR)
+        remaining_ticks = quantum_ticks;
 
     if (next->pdt != current->pdt)
         update_cr3(next->pdt);
