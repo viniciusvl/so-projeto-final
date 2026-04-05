@@ -83,7 +83,7 @@ void timer_interrupt_handler(struct pit_irq_frame *frame)
 
         frame_user_to_context(user_frame, &context);
 
-        if (scheduler_schedule_from_context(&context, 1) > 0)
+        if (scheduler_schedule_from_context(&context, 1, STAT_CONTEXT_PIT) > 0)
             frame_context_to_user(user_frame, &context);
     }
 

@@ -422,6 +422,7 @@ static uint32_t sys_exec(struct syscall_frame *frame)
 
     /* Hook para escalonador cooperativo: tarefa pronta para próxima seleção. */
     pcb->state = PROCESS_STATE_READY;
+    log_process_stat(pcb->pid, STAT_EVENT_CREATED, STAT_CONTEXT_EXEC);
 
     serial_write(SERIAL_COM1_BASE, "[SYSCALL] exec concluido");
     return 0;
@@ -487,13 +488,15 @@ static uint32_t sys_fork(struct syscall_frame *frame)
         return (uint32_t)-1;
     }
 
+    log_process_stat(child->pid, STAT_EVENT_CREATED, STAT_CONTEXT_FORK);
+
     serial_write(SERIAL_COM1_BASE, "[SYSCALL] fork concluido");
     return child_pid;
 }
 
 static uint32_t sys_yield(struct syscall_frame *frame)
 {
-    if (scheduler_schedule_from_context((struct process_context *)frame, 1) < 0) {
+    if (scheduler_schedule_from_context((struct process_context *)frame, 1, STAT_CONTEXT_YIELD) < 0) {
         serial_write(SERIAL_COM1_BASE, "[SYSCALL] yield: falha no scheduler");
         return (uint32_t)-1;
     }

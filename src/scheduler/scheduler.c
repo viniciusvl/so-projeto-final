@@ -1,6 +1,8 @@
 #include "scheduler/scheduler.h"
 #include "process/process.h"
 #include "segment/tss.h"
+#include "interrupts/pit.h"
+#include "io/serial_ports.h"
 
 static struct PCB *current_pcb;
 
@@ -21,6 +23,54 @@ static uint32_t quantum_ticks = 1;
 
 /* Contador de ticks restantes para o processo corrente (RR) */
 static uint32_t remaining_ticks;
+
+static uint32_t append_u32(char *buf, uint32_t pos, uint32_t value)
+{
+    char tmp[10];
+    uint32_t len = 0;
+
+    if (value == 0) {
+        buf[pos++] = '0';
+        return pos;
+    }
+
+    while (value > 0 && len < 10) {
+        tmp[len++] = (char)('0' + (value % 10));
+        value /= 10;
+    }
+
+    while (len > 0)
+        buf[pos++] = tmp[--len];
+
+    return pos;
+}
+
+void log_process_stat(uint32_t pid, uint32_t event_id, uint32_t context_id)
+{
+    char line[64];
+    uint32_t pos = 0;
+    uint32_t ticks = pit_get_ticks();
+    const char prefix[] = "[STAT] ";
+
+    for (uint32_t i = 0; i < (sizeof(prefix) - 1); i++)
+        line[pos++] = prefix[i];
+
+    pos = append_u32(line, pos, pid);
+    line[pos++] = ',';
+    pos = append_u32(line, pos, ticks);
+    line[pos++] = ',';
+    pos = append_u32(line, pos, event_id);
+    line[pos++] = ',';
+    pos = append_u32(line, pos, context_id);
+    line[pos] = '\0';
+
+    serial_write(SERIAL_COM1_BASE, line);
+}
+
+void log_process_exit(uint32_t pid)
+{
+    log_process_stat(pid, STAT_EVENT_TERMINATED, STAT_CONTEXT_EXIT);
+}
 
 void scheduler_init(void)
 {
@@ -193,10 +243,11 @@ static void scheduler_init_context_from_pcb(struct PCB *pcb)
     pcb->context.user_ss = pcb->ss;
 }
 
-int scheduler_schedule_from_context(struct process_context *context, int requeue_current)
+int scheduler_schedule_from_context(struct process_context *context, int requeue_current, uint32_t context_id)
 {
     struct PCB *current;
     struct PCB *next;
+    uint32_t outgoing_event;
 
     if (context == 0)
         return -1;
@@ -241,6 +292,10 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
 
     scheduler_set_current(next);
     next->state = PROCESS_STATE_RUNNING;
+
+    outgoing_event = (context_id == STAT_CONTEXT_PIT) ? STAT_EVENT_PREEMPTED : STAT_EVENT_YIELDED;
+    log_process_stat(current->pid, outgoing_event, context_id);
+    log_process_stat(next->pid, STAT_EVENT_SCHEDULED, context_id);
 
     /* Reset do quantum ao trocar para novo processo (RR) */
     if (scheduling_policy == SCHEDULER_POLICY_RR)
