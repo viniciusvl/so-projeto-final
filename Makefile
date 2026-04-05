@@ -57,8 +57,12 @@ compile_c_file:
 compile_modules:
 	@mkdir -p build/modules iso/modules
 	$(AS) -f elf32 src/modules_pre_compiled/starter.s -o build/modules/starter.o
-	$(CC) -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -fno-pic -c src/modules_pre_compiled/program_module.c -o build/modules/program_module.o
-	ld -T linker/link_modules.ld -melf_i386 build/modules/starter.o build/modules/program_module.o -o iso/modules/program
+	$(CC) -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -fno-pic -c src/modules_pre_compiled/task_short.c -o build/modules/task_short.o
+	$(CC) -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -fno-pic -c src/modules_pre_compiled/task_medium.c -o build/modules/task_medium.o
+	$(CC) -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -fno-pic -c src/modules_pre_compiled/task_long.c -o build/modules/task_long.o
+	ld -T linker/link_modules.ld -melf_i386 build/modules/starter.o build/modules/task_short.o -o iso/modules/task_short
+	ld -T linker/link_modules.ld -melf_i386 build/modules/starter.o build/modules/task_medium.o -o iso/modules/task_medium
+	ld -T linker/link_modules.ld -melf_i386 build/modules/starter.o build/modules/task_long.o -o iso/modules/task_long
 
 # Linkando o código objeto do OS com um kernel
 link_kernel:
@@ -80,7 +84,7 @@ generate_iso_image:
 	iso
 
 clean:
-	rm -rf build/* out/* iso/boot/kernel.elf iso/modules/program || true
+	rm -rf build/* out/* iso/boot/kernel.elf iso/modules/task_short iso/modules/task_medium iso/modules/task_long || true
 
 run: all
 	bochs -f config/bochsrc.txt -q

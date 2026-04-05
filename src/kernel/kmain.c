@@ -44,6 +44,14 @@ void kmain(unsigned int ebx)
   // Inicializa PFA (reserva frames do módulo internamente)
   pfa_init(mem_start, mem_end, mod_start, mod_end);
 
+  /* Reserva os demais módulos GRUB para evitar sobrescrita por alocações do kernel. */
+  if (mod != 0 && mbinfo->mods_count > 1) {
+    for (uint32_t i = 1; i < mbinfo->mods_count; i++) {
+      for (uint32_t addr = mod[i].mod_start; addr < mod[i].mod_end; addr += PAGE_SIZE)
+        pfa_reserve(addr);
+    }
+  }
+
   serial_write(SERIAL_COM1_BASE, "[SYS - PAGING] PFA inicializado com sucesso");
 
   /* Modifica para que a PDT alocada em section data aponte para PT com frames de 4KB */
@@ -82,13 +90,32 @@ void kmain(unsigned int ebx)
    */
   scheduler_set_policy(SCHEDULER_POLICY_FCFS);
   
-  /* Cria PCB e entra em user mode */ 
-  if (mod_start != 0 && mod_end != 0) {
-    serial_write(SERIAL_COM1_BASE, "Criando PCB para modulo GRUB");
-    struct PCB *pcb = create_pcb_grub_modules(mod_start, mod_end);
+  /* Cria PCBs para todos os módulos e executa o primeiro; os demais entram na fila READY. */
+  if (mod != 0 && mbinfo->mods_count > 0) {
+    struct PCB *first_pcb = 0;
 
-    serial_write(SERIAL_COM1_BASE, "Executando modulo em user mode");
-    run_user_mode_module(pcb);
+    for (uint32_t i = 0; i < mbinfo->mods_count; i++) {
+      serial_write(SERIAL_COM1_BASE, "Criando PCB para modulo GRUB");
+      struct PCB *pcb = create_pcb_grub_modules(mod[i].mod_start, mod[i].mod_end);
+
+      if (pcb == 0)
+        continue;
+
+      if (first_pcb == 0) {
+        first_pcb = pcb;
+      } else {
+        pcb->state = PROCESS_STATE_READY;
+        if (scheduler_enqueue_ready(pcb) < 0)
+          serial_write(SERIAL_COM1_BASE, "[SCHED] fila READY cheia ao inserir modulo");
+      }
+    }
+
+    if (first_pcb != 0) {
+      serial_write(SERIAL_COM1_BASE, "Executando modulo em user mode");
+      run_user_mode_module(first_pcb);
+    } else {
+      serial_write(SERIAL_COM1_BASE, "Falha ao criar PCB para modulos GRUB");
+    }
   } else {
     serial_write(SERIAL_COM1_BASE, "Nenhum modulo encontrado");
   }

@@ -293,8 +293,10 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
     scheduler_set_current(next);
     next->state = PROCESS_STATE_RUNNING;
 
-    outgoing_event = (context_id == STAT_CONTEXT_PIT) ? STAT_EVENT_PREEMPTED : STAT_EVENT_YIELDED;
-    log_process_stat(current->pid, outgoing_event, context_id);
+    if (context_id != STAT_CONTEXT_EXIT) {
+        outgoing_event = (context_id == STAT_CONTEXT_PIT) ? STAT_EVENT_PREEMPTED : STAT_EVENT_YIELDED;
+        log_process_stat(current->pid, outgoing_event, context_id);
+    }
     log_process_stat(next->pid, STAT_EVENT_SCHEDULED, context_id);
 
     /* Reset do quantum ao trocar para novo processo (RR) */

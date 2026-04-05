@@ -505,6 +505,31 @@ static uint32_t sys_yield(struct syscall_frame *frame)
     return frame->eax;
 }
 
+static uint32_t sys_exit(struct syscall_frame *frame)
+{
+    struct PCB *current = scheduler_get_current();
+    uint32_t old_pdt;
+
+    if (current == 0) {
+        serial_write(SERIAL_COM1_BASE, "[SYSCALL] exit: processo corrente ausente");
+        return (uint32_t)-1;
+    }
+
+    current->state = PROCESS_STATE_TERMINATED;
+    log_process_exit(current->pid);
+
+    old_pdt = current->pdt;
+
+    if (scheduler_schedule_from_context((struct process_context *)frame, 0, STAT_CONTEXT_EXIT) > 0) {
+        destroy_user_space(old_pdt);
+        return frame->eax;
+    }
+
+    serial_write(SERIAL_COM1_BASE, "[SYSCALL] exit: sem processos prontos, entrando em idle");
+    for (;;)
+        __asm__ volatile("hlt");
+}
+
 uint32_t syscall_dispatcher(uint32_t syscall_number, struct syscall_frame *frame)
 {
     serial_write(SERIAL_COM1_BASE, "[SYSCALL] syscall recebida: ");
@@ -527,6 +552,9 @@ uint32_t syscall_dispatcher(uint32_t syscall_number, struct syscall_frame *frame
 
         case SYSCALL_YIELD:
             return sys_yield(frame);
+
+        case SYSCALL_EXIT:
+            return sys_exit(frame);
 
         default:
             serial_write(SERIAL_COM1_BASE, "[SYSCALL] syscall desconhecida!");

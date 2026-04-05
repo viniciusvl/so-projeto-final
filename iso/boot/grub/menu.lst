@@ -2,4 +2,6 @@ default=0
 timeout=0
 title os
 kernel /boot/kernel.elf
-module /modules/program
+module /modules/task_long
+module /modules/task_medium
+module /modules/task_short
