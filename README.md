@@ -73,3 +73,29 @@ make clean
 
 
 ## **Constribuições individuais:**
+
+**VINICIUS VICTOR LOPES DE ALMEIDA, 20240008181**
+
+- **Capítulo 5:** segmentação de memória com GDT apenas kernel. 
+- **Capítulo 6:** leitura de interrupções do teclado
+- **Capítulo 11:** sistema para que processos rodem em User Mode
+- **Capítulo 13:** permitir que processos em User Mode lancem interrupções para fazer chamadas de sistema 
+
+**PEDRO HENRIQUE PAIVA SOUZA, 20240008145**:
+
+- **Capítulo 2:** configurações iniciais do projeto
+- **Capítulo 3:** configurações de pilha do Kernel e integração do código C
+- **Capítulo 7:** rodar programas que estão em módulos do GRUB, pré User Mode
+- **Capítulo 14:** sistema multitasking 
+- **Algoritmo de escalonamento FCFS**
+
+**MARIA ELOIZA MONTEIRO DE SOUZA, 20240008280**:
+
+- **Capítulo 9:** ativar paginação no sistema
+- **Capítulo 10:** criar Page Frame Allocator, criar Kernel Heap, implemetar função de *malloc*  
+
+**ALLAN GABRIEL DA CUNHA VASCONCELOS, 20240009142**:
+
+- **Capítulo 4:** sistema de I/O, framebuffer e serial port. 
+- **Algoritmo de escalonamento SJF**
+- **Algoritmo de escalonamento Round Robin**
