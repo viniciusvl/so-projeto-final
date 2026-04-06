@@ -6,3 +6,4 @@ bochslog.txt
 .claude
 CLAUDE.md
 venv/
+scripts/*.csv

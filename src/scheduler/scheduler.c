@@ -45,6 +45,68 @@ static uint32_t append_u32(char *buf, uint32_t pos, uint32_t value)
     return pos;
 }
 
+static uint32_t append_literal(char *buf, uint32_t pos, const char *text)
+{
+    while (*text != '\0')
+        buf[pos++] = *text++;
+    return pos;
+}
+
+static uint32_t predicted_burst_for_sjf(const struct PCB *pcb)
+{
+    if (pcb == 0)
+        return 0xFFFFFFFFU;
+
+    if (pcb->state != PROCESS_STATE_READY)
+        return 0xFFFFFFFFU;
+
+    if (pcb->predicted_burst == 0)
+        return 0xFFFFFFFFU;
+
+    return pcb->predicted_burst;
+}
+
+static void log_sjf_pick(uint32_t pid, uint32_t burst)
+{
+    char line[96];
+    uint32_t pos = 0;
+
+    pos = append_literal(line, pos, "[SJF] Picking PID ");
+    pos = append_u32(line, pos, pid);
+    pos = append_literal(line, pos, " with Burst ");
+    pos = append_u32(line, pos, burst);
+    line[pos] = '\0';
+
+    serial_write(SERIAL_COM1_BASE, line);
+}
+
+static void scheduler_update_burst_prediction(struct PCB *pcb, uint32_t now_ticks)
+{
+    uint32_t elapsed_ticks;
+
+    if (pcb == 0)
+        return;
+
+    if (now_ticks >= pcb->last_dispatch_tick)
+        elapsed_ticks = now_ticks - pcb->last_dispatch_tick;
+    else
+        elapsed_ticks = 1;
+
+    if (elapsed_ticks == 0)
+        elapsed_ticks = 1;
+
+    pcb->burst_time = elapsed_ticks;
+
+    /* Media Exponencial com alpha=0.5: tau(n+1) = 0.5*t(n) + 0.5*tau(n) */
+    if (pcb->predicted_burst == 0)
+        pcb->predicted_burst = elapsed_ticks;
+    else
+        pcb->predicted_burst = (pcb->predicted_burst + elapsed_ticks) / 2U;
+
+    if (pcb->predicted_burst == 0)
+        pcb->predicted_burst = 1;
+}
+
 void log_process_stat(uint32_t pid, uint32_t event_id, uint32_t context_id)
 {
     char line[64];
@@ -125,6 +187,8 @@ uint32_t scheduler_allocate_pid(void)
 void scheduler_set_current(struct PCB *pcb)
 {
     current_pcb = pcb;
+    if (pcb != 0)
+        pcb->last_dispatch_tick = pit_get_ticks();
 }
 
 struct PCB *scheduler_get_current(void)
@@ -160,7 +224,7 @@ struct PCB *scheduler_dequeue_ready(void)
 }
 
 /*
- * scheduler_dequeue_sjf: retira da fila o processo com menor burst_time.
+ * scheduler_dequeue_sjf: retira da fila o processo com menor predicted_burst.
  * Percorre toda a fila circular para encontrar o menor valor.
  */
 static struct PCB *scheduler_dequeue_sjf(void)
@@ -169,21 +233,28 @@ static struct PCB *scheduler_dequeue_sjf(void)
     uint32_t best_index;
     uint32_t best_burst;
     struct PCB *best_pcb;
+    const uint32_t invalid_index = SCHEDULER_READY_QUEUE_CAPACITY;
 
     if (ready_len == 0)
         return 0;
 
-    /* Encontra o indice (relativo a head) do processo com menor burst_time */
-    best_index = 0;
-    best_burst = ready_queue[ready_head]->burst_time;
+    /* Seleciona o READY com menor predicted_burst. */
+    best_index = invalid_index;
+    best_burst = 0xFFFFFFFFU;
 
-    for (i = 1; i < ready_len; i++) {
+    for (i = 0; i < ready_len; i++) {
         uint32_t idx = (ready_head + i) % SCHEDULER_READY_QUEUE_CAPACITY;
-        if (ready_queue[idx]->burst_time < best_burst) {
-            best_burst = ready_queue[idx]->burst_time;
+        struct PCB *candidate = ready_queue[idx];
+        uint32_t candidate_burst = predicted_burst_for_sjf(candidate);
+
+        if (best_index == invalid_index || candidate_burst < best_burst) {
+            best_burst = candidate_burst;
             best_index = i;
         }
     }
+
+    if (best_index == invalid_index)
+        return 0;
 
     /* Indice absoluto na fila circular */
     uint32_t abs_index = (ready_head + best_index) % SCHEDULER_READY_QUEUE_CAPACITY;
@@ -202,6 +273,8 @@ static struct PCB *scheduler_dequeue_sjf(void)
     else
         ready_tail--;
     ready_len--;
+
+    log_sjf_pick(best_pcb->pid, best_pcb->predicted_burst);
 
     return best_pcb;
 }
@@ -248,6 +321,7 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
     struct PCB *current;
     struct PCB *next;
     uint32_t outgoing_event;
+    uint32_t now_ticks;
 
     if (context == 0)
         return -1;
@@ -277,6 +351,8 @@ int scheduler_schedule_from_context(struct process_context *context, int requeue
     current->ss = context->user_ss;
 
     if (requeue_current) {
+        now_ticks = pit_get_ticks();
+        scheduler_update_burst_prediction(current, now_ticks);
         current->state = PROCESS_STATE_READY;
         if (scheduler_enqueue_ready(current) < 0) {
             current->state = PROCESS_STATE_RUNNING;

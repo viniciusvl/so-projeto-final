@@ -75,10 +75,14 @@ void kmain(unsigned int ebx)
   // IDT
   init_idt(&idt_global, idt_entries);
 
-  /* Timer preemptivo a cada 10ms (É opcional dependendo da flag global em "scheduler.c")*/
+  /* Timer preemptivo a cada 10ms*/
   pit_init(10);
 
   scheduler_init();
+
+  /* Habilita preempcao automatica via PIT apos inicializacao do scheduler. */
+  kernel_enable_preemption();
+  serial_write(SERIAL_COM1_BASE, "[SCHED] preempcao PIT habilitada");
 
   /* Define o quantum (time slice) para Round Robin: 3 ticks = 30ms (PIT a 10ms) */
   scheduler_set_quantum(3);
@@ -88,7 +92,7 @@ void kmain(unsigned int ebx)
    *   SCHEDULER_POLICY_SJF  - Shortest Job First
    *   SCHEDULER_POLICY_RR   - Round Robin
    */
-  scheduler_set_policy(SCHEDULER_POLICY_FCFS);
+  scheduler_set_policy(SCHEDULER_POLICY_SJF);
   
   /* Cria PCBs para todos os módulos e executa o primeiro; os demais entram na fila READY. */
   if (mod != 0 && mbinfo->mods_count > 0) {

@@ -1,6 +1,7 @@
 #include "interrupts/pit.h"
 #include "interrupts/idt.h"
 #include "io/io.h"
+#include "io/serial_ports.h"
 #include "process/process.h"
 #include "scheduler/scheduler.h"
 
@@ -10,6 +11,7 @@
 #define PIT_COMMAND_LOHI_MODE 0x36
 
 static volatile uint32_t pit_ticks;
+static uint8_t pit_preemption_probe_logged;
 
 void pit_init(uint32_t ms)
 {
@@ -80,6 +82,11 @@ void timer_interrupt_handler(struct pit_irq_frame *frame)
     /* Ring 3: frame possui SS/ESP de user e pode ser escalonado. */
     if (preemption_enabled && frame != 0 && (frame->cs & 0x3) == 0x3) {
         struct pit_irq_frame_user *user_frame = (struct pit_irq_frame_user *)frame;
+
+        if (!pit_preemption_probe_logged) {
+            serial_write(SERIAL_COM1_BASE, "[PIT] preempting path ativo");
+            pit_preemption_probe_logged = 1;
+        }
 
         frame_user_to_context(user_frame, &context);
 

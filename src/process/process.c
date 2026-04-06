@@ -192,6 +192,8 @@ struct PCB *create_pcb(void)
     pcb->kernel_esp0 = 0;
     pcb->state  = PROCESS_STATE_READY;
     pcb->burst_time = 0;
+    pcb->predicted_burst = 1;
+    pcb->last_dispatch_tick = 0;
 
     pcb->context.ebp = 0;
     pcb->context.edi = 0;
